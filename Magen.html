@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продвинутый симулятор магнитного ротора-статора с материалами</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 1000px;
+        }
+        
+        .simulation-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1, h2, h3, h4 {
+            margin-top: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .subsection {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+        
+        .slider-container {
+            margin: 12px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .value-display {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .dimension-input, .material-input {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .dimension-input input[type="number"],
+        .material-input select,
+        .material-input input[type="number"] {
+            width: 70px;
+            padding: 6px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+        }
+        
+        .material-input select {
+            width: 120px;
+            padding: 5px;
+        }
+        
+        canvas {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+        
+        .data-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            flex-grow: 1;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .graph-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            height: 280px;
+        }
+        
+        .optimization-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .optimization-status {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 11px;
+            height: 80px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        
+        .magnet-type-selector {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .magnet-type-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .magnet-type-btn.active {
+            background: rgba(100, 200, 255, 0.3);
+            border-color: #64c8ff;
+        }
+        
+        .magnet-type-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .color-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: rgba(100, 200, 255, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                max-height: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Продвинутый симулятор магнитного ротора-статора с материалами</h1>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="tab-container">
+                <div class="tab active" data-tab="general">Основные</div>
+                <div class="tab" data-tab="materials">Материалы</div>
+                <div class="tab" data-tab="magnets">Магниты</div>
+                <div class="tab" data-tab="simulation">Симуляция</div>
+            </div>
+            
+            <div id="general-tab" class="tab-content active">
+                <div class="section">
+                    <h3>Конфигурация системы</h3>
+                    <div class="slider-container">
+                        <label>Тип статора: 
+                            <select id="statorType" style="width: 150px; float: right; padding: 5px;">
+                                <option value="internal">Внутренний</option>
+                                <option value="external">Внешний</option>
+                            </select>
+                        </label>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество магнитов на роторе: <span class="value-display" id="rotorMagnetCountValue">6</span></label>
+                        <input type="range" id="rotorMagnetCount" min="2" max="24" value="6" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество магнитов на статоре: <span class="value-display" id="statorMagnetCountValue">8</span></label>
+                        <input type="range" id="statorMagnetCount" min="2" max="24" value="8" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Диаметр ротора (мм): <span class="value-display" id="rotorDiameterValue">150</span></label>
+                        <input type="range" id="rotorDiameter" min="50" max="300" value="150" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Воздушный зазор (мм): <span class="value-display" id="airGapValue">5</span></label>
+                        <input type="range" id="airGap" min="0.5" max="20" value="5" step="0.5">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Начальный угол ротора (град): <span class="value-display" id="startAngleValue">0</span></label>
+                        <input type="range" id="startAngle" min="0" max="360" value="0" step="1">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Геометрия магнитов</h3>
+                    <div class="input-group">
+                        <div class="dimension-input">
+                            <label>Ширина (мм):</label>
+                            <input type="number" id="magnetWidth" value="10" min="1" max="50" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Высота (мм):</label>
+                            <input type="number" id="magnetHeight" value="15" min="1" max="50" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Длина (мм):</label>
+                            <input type="number" id="magnetLength" value="20" min="1" max="50" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Угол (град):</label>
+                            <input type="number" id="magnetAngle" value="0" min="-45" max="45" step="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="materials-tab" class="tab-content">
+                <div class="section">
+                    <h3>Материал ротора</h3>
+                    <div class="material-input">
+                        <label>Материал:</label>
+                        <select id="rotorMaterial">
+                            <option value="aluminum">Алюминий (2700 кг/м³)</option>
+                            <option value="steel">Сталь (7800 кг/м³)</option>
+                            <option value="titanium">Титан (4500 кг/м³)</option>
+                            <option value="plastic_abs">Пластик ABS (1050 кг/м³)</option>
+                            <option value="plastic_pom">Пластик POM (1410 кг/м³)</option>
+                            <option value="plastic_nylon">Пластик Nylon (1150 кг/м³)</option>
+                            <option value="carbon">Карбон (1800 кг/м³)</option>
+                            <option value="copper">Медь (8960 кг/м³)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Толщина ротора (мм): <span class="value-display" id="rotorThicknessValue">10</span></label>
+                        <input type="range" id="rotorThickness" min="1" max="30" value="10" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Материал статора</h3>
+                    <div class="material-input">
+                        <label>Материал:</label>
+                        <select id="statorMaterial">
+                            <option value="steel">Сталь (7800 кг/м³)</option>
+                            <option value="aluminum">Алюминий (2700 кг/м³)</option>
+                            <option value="plastic_abs">Пластик ABS (1050 кг/м³)</option>
+                            <option value="plastic_pom">Пластик POM (1410 кг/м³)</option>
+                            <option value="plastic_nylon">Пластик Nylon (1150 кг/м³)</option>
+                            <option value="copper">Медь (8960 кг/м³)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Толщина статора (мм): <span class="value-display" id="statorThicknessValue">5</span></label>
+                        <input type="range" id="statorThickness" min="1" max="20" value="5" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Инертные грузы</h3>
+                    <div class="material-input">
+                        <label>Добавить грузы:</label>
+                        <select id="inertMassType">
+                            <option value="none">Нет</option>
+                            <option value="granite">Гранит (2650 кг/м³)</option>
+                            <option value="lead">Свинец (11340 кг/м³)</option>
+                            <option value="tungsten">Вольфрам (19250 кг/м³)</option>
+                            <option value="brass">Латунь (8500 кг/м³)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество грузов: <span class="value-display" id="inertMassCountValue">0</span></label>
+                        <input type="range" id="inertMassCount" min="0" max="8" value="0" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Масса груза (г): <span class="value-display" id="inertMassWeightValue">10</span></label>
+                        <input type="range" id="inertMassWeight" min="1" max="100" value="10" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Радиус расположения (%): <span class="value-display" id="inertMassRadiusValue">80</span></label>
+                        <input type="range" id="inertMassRadius" min="10" max="95" value="80" step="5">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="magnets-tab" class="tab-content">
+                <div class="section">
+                    <h3>Типы магнитов</h3>
+                    <div class="subsection">
+                        <h4>Магниты ротора</h4>
+                        <div class="magnet-type-selector" id="rotorMagnetTypeSelector">
+                            <div class="magnet-type-btn active" data-type="neodymium_n35">
+                                <span class="color-indicator" style="background: #ff4444;"></span>
+                                Неодим N35
+                            </div>
+                            <div class="magnet-type-btn" data-type="neodymium_n52">
+                                <span class="color-indicator" style="background: #ff6666;"></span>
+                                Неодим N52
+                            </div>
+                            <div class="magnet-type-btn" data-type="ferrite">
+                                <span class="color-indicator" style="background: #7777ff;"></span>
+                                Феррит
+                            </div>
+                            <div class="magnet-type-btn" data-type="samarium_cobalt">
+                                <span class="color-indicator" style="background: #ff77ff;"></span>
+                                Самарий-кобальт
+                            </div>
+                            <div class="magnet-type-btn" data-type="alnico">
+                                <span class="color-indicator" style="background: #ffaa44;"></span>
+                                Альнико
+                            </div>
+                        </div>
+                        
+                        <div class="slider-container">
+                            <label>Смешивание типов (% основного): <span class="value-display" id="rotorMixRatioValue">100</span></label>
+                            <input type="range" id="rotorMixRatio" min="0" max="100" value="100" step="5">
+                        </div>
+                    </div>
+                    
+                    <div class="subsection">
+                        <h4>Магниты статора</h4>
+                        <div class="magnet-type-selector" id="statorMagnetTypeSelector">
+                            <div class="magnet-type-btn active" data-type="neodymium_n35">
+                                <span class="color-indicator" style="background: #ff4444;"></span>
+                                Неодим N35
+                            </div>
+                            <div class="magnet-type-btn" data-type="neodymium_n52">
+                                <span class="color-indicator" style="background: #ff6666;"></span>
+                                Неодим N52
+                            </div>
+                            <div class="magnet-type-btn" data-type="ferrite">
+                                <span class="color-indicator" style="background: #7777ff;"></span>
+                                Феррит
+                            </div>
+                            <div class="magnet-type-btn" data-type="samarium_cobalt">
+                                <span class="color-indicator" style="background: #ff77ff;"></span>
+                                Самарий-кобальт
+                            </div>
+                        </div>
+                        
+                        <div class="slider-container">
+                            <label>Смешивание типов (% основного): <span class="value-display" id="statorMixRatioValue">100</span></label>
+                            <input type="range" id="statorMixRatio" min="0" max="100" value="100" step="5">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Свойства магнитов</h3>
+                    <div id="magnetPropertiesDisplay" style="font-size: 12px; line-height: 1.4;">
+                        <div>Тип: <span id="currentMagnetType">Неодим N35</span></div>
+                        <div>Остаточная индукция Br: <span id="currentBr">1.2 T</span></div>
+                        <div>Коэрцитивная сила Hc: <span id="currentHc">900 kA/m</span></div>
+                        <div>Энергия (BH)max: <span id="currentBHmax">35 kJ/m³</span></div>
+                        <div>Температурный коэффициент: <span id="currentTempCoef">-0.12 %/°C</span></div>
+                        <div>Рабочая температура: <span id="currentMaxTemp">80 °C</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="simulation-tab" class="tab-content">
+                <div class="section">
+                    <h3>Параметры симуляции</h3>
+                    <div class="slider-container">
+                        <label>Время симуляции (оборотов): <span class="value-display" id="simulationTimeValue">2</span></label>
+                        <input type="range" id="simulationTime" min="0.5" max="10" value="2" step="0.1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Шаг времени (мс): <span class="value-display" id="timeStepValue">5</span></label>
+                        <input type="range" id="timeStep" min="1" max="50" value="5" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Трение: <span class="value-display" id="frictionValue">0.01</span></label>
+                        <input type="range" id="friction" min="0" max="0.1" value="0.01" step="0.001">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Температура (°C): <span class="value-display" id="temperatureValue">20</span></label>
+                        <input type="range" id="temperature" min="-40" max="150" value="20" step="5">
+                    </div>
+                </div>
+                
+                <div class="optimization-panel">
+                    <h3>Оптимизация параметров</h3>
+                    <label>Целевая скорость (об/мин):</label>
+                    <input type="number" id="targetRPM" value="60" min="10" max="1000" step="10" style="width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: none; background: rgba(255,255,255,0.1); color: white;">
+                    
+                    <div class="button-group">
+                        <button class="button" id="runFullSimulationBtn">Полная симуляция</button>
+                        <button class="button" id="optimizeParamsBtn">Автооптимизация</button>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="optimizationProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="optimization-status" id="optimizationStatus">
+                        <div class="status-item">Готов к работе...</div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="button" id="resetBtn">Сбросить</button>
+                    <button class="button" id="togglePauseBtn">Пауза</button>
+                    <button class="button" id="exportBtn">Экспорт</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="simulation-area">
+            <h2>Визуализация системы</h2>
+            <canvas id="simulationCanvas"></canvas>
+            
+            <div class="graph-container">
+                <canvas id="graphCanvas"></canvas>
+            </div>
+            
+            <div class="data-display">
+                <h3>Данные в реальном времени</h3>
+                <div class="data-row">
+                    <span>Положение:</span>
+                    <span id="rotorPosition">0.00°</span>
+                </div>
+                <div class="data-row">
+                    <span>Скорость:</span>
+                    <span id="angularVelocity">0.00 рад/с</span>
+                </div>
+                <div class="data-row">
+                    <span>Ускорение:</span>
+                    <span id="angularAcceleration">0.00 рад/с²</span>
+                </div>
+                <div class="data-row">
+                    <span>Момент сил:</span>
+                    <span id="totalTorque">0.00 Н·м</span>
+                </div>
+                <div class="data-row">
+                    <span>Макс. сила:</span>
+                    <span id="maxForce">0.00 Н</span>
+                </div>
+                <div class="data-row">
+                    <span>Кинетическая энергия:</span>
+                    <span id="kineticEnergy">0.00 Дж</span>
+                </div>
+                <div class="data-row">
+                    <span>Частота:</span>
+                    <span id="rotationFrequency">0.00 Гц (0.00 об/мин)</span>
+                </div>
+                <div class="data-row">
+                    <span>Масса ротора:</span>
+                    <span id="rotorMass">0.00 кг</span>
+                </div>
+                <div class="data-row">
+                    <span>Момент инерции:</span>
+                    <span id="momentOfInertia">0.00 кг·м²</span>
+                </div>
+                <div class="data-row">
+                    <span>КПД системы:</span>
+                    <span id="efficiency">0.00%</span>
+                </div>
+                <div class="data-row">
+                    <span>Стабильность:</span>
+                    <span id="stability">0.00%</span>
+                </div>
+                <div class="data-row">
+                    <span>Температура:</span>
+                    <span id="temperatureDisplay">20 °C</span>
+                </div>
+                <div class="data-row">
+                    <span>Время симуляции:</span>
+                    <span id="simulationTimeDisplay">0.00 с</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Константы и глобальные переменные
+        const canvas = document.getElementById('simulationCanvas');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        // Настройка размеров canvas
+        canvas.width = 800;
+        canvas.height = 400;
+        graphCanvas.width = 800;
+        graphCanvas.height = 280;
+        
+        // История состояний
+        let simulationHistory = {
+            time: [],
+            angle: [],
+            velocity: [],
+            torque: [],
+            temperature: [],
+            efficiency: []
+        };
+        
+        // База данных материалов
+        const MATERIALS = {
+            // Пластмассы
+            plastic_abs: {
+                name: "ABS пластик",
+                density: 1050, // кг/м³
+                color: "#888888",
+                thermalConductivity: 0.2, // Вт/(м·К)
+                specificHeat: 1300, // Дж/(кг·К)
+                maxTemp: 80 // °C
+            },
+            plastic_pom: {
+                name: "POM пластик",
+                density: 1410,
+                color: "#AAAAAA",
+                thermalConductivity: 0.31,
+                specificHeat: 1500,
+                maxTemp: 100
+            },
+            plastic_nylon: {
+                name: "Nylon пластик",
+                density: 1150,
+                color: "#CCCCCC",
+                thermalConductivity: 0.25,
+                specificHeat: 1700,
+                maxTemp: 85
+            },
+            // Металлы
+            aluminum: {
+                name: "Алюминий",
+                density: 2700,
+                color: "#A0A0A0",
+                thermalConductivity: 237,
+                specificHeat: 900,
+                maxTemp: 600
+            },
+            steel: {
+                name: "Сталь",
+                density: 7800,
+                color: "#707070",
+                thermalConductivity: 50,
+                specificHeat: 450,
+                maxTemp: 700
+            },
+            titanium: {
+                name: "Титан",
+                density: 4500,
+                color: "#B0B0B0",
+                thermalConductivity: 22,
+                specificHeat: 520,
+                maxTemp: 600
+            },
+            copper: {
+                name: "Медь",
+                density: 8960,
+                color: "#B87333",
+                thermalConductivity: 401,
+                specificHeat: 385,
+                maxTemp: 200
+            },
+            carbon: {
+                name: "Карбон",
+                density: 1800,
+                color: "#202020",
+                thermalConductivity: 140,
+                specificHeat: 710,
+                maxTemp: 200
+            }
+        };
+        
+        // База данных инертных материалов
+        const INERT_MATERIALS = {
+            granite: {
+                name: "Гранит",
+                density: 2650,
+                color: "#806060"
+            },
+            lead: {
+                name: "Свинец",
+                density: 11340,
+                color: "#404040"
+            },
+            tungsten: {
+                name: "Вольфрам",
+                density: 19250,
+                color: "#808080"
+            },
+            brass: {
+                name: "Латунь",
+                density: 8500,
+                color: "#B0A040"
+            }
+        };
+        
+        // База данных магнитных материалов
+        const MAGNET_TYPES = {
+            neodymium_n35: {
+                name: "Неодим N35",
+                type: "neodymium",
+                Br: 1.2, // Остаточная индукция, Тл
+                Hc: 900, // Коэрцитивная сила, кА/м
+                BHmax: 35, // Максимальная энергия, кДж/м³
+                density: 7500, // кг/м³
+                tempCoef: -0.12, // Температурный коэффициент, %/°C
+                maxTemp: 80, // Максимальная рабочая температура, °C
+                curieTemp: 310, // Температура Кюри, °C
+                color: "#ff4444",
+                conductivity: 0.67, // Электропроводность, MS/m
+                relativePermeability: 1.05 // Относительная магнитная проницаемость
+            },
+            neodymium_n52: {
+                name: "Неодим N52",
+                type: "neodymium",
+                Br: 1.48,
+                Hc: 860,
+                BHmax: 52,
+                density: 7500,
+                tempCoef: -0.12,
+                maxTemp: 80,
+                curieTemp: 310,
+                color: "#ff6666",
+                conductivity: 0.67,
+                relativePermeability: 1.05
+            },
+            ferrite: {
+                name: "Феррит",
+                type: "ferrite",
+                Br: 0.39,
+                Hc: 280,
+                BHmax: 3.5,
+                density: 4800,
+                tempCoef: -0.2,
+                maxTemp: 250,
+                curieTemp: 450,
+                color: "#7777ff",
+                conductivity: 0.0001,
+                relativePermeability: 1.1
+            },
+            samarium_cobalt: {
+                name: "Самарий-кобальт",
+                type: "rare_earth",
+                Br: 1.07,
+                Hc: 800,
+                BHmax: 26,
+                density: 8400,
+                tempCoef: -0.03,
+                maxTemp: 300,
+                curieTemp: 750,
+                color: "#ff77ff",
+                conductivity: 1.5,
+                relativePermeability: 1.05
+            },
+            alnico: {
+                name: "Альнико",
+                type: "alnico",
+                Br: 1.3,
+                Hc: 60,
+                BHmax: 5.5,
+                density: 7300,
+                tempCoef: -0.02,
+                maxTemp: 500,
+                curieTemp: 800,
+                color: "#ffaa44",
+                conductivity: 2.5,
+                relativePermeability: 1.5
+            }
+        };
+        
+        // Параметры системы
+        let params = {
+            statorType: "internal", // internal или external
+            rotorMagnetCount: 6,
+            statorMagnetCount: 8,
+            rotorDiameter: 150, // мм
+            airGap: 5, // мм
+            startAngle: 0, // градусы
+            
+            // Материалы
+            rotorMaterial: "aluminum",
+            statorMaterial: "steel",
+            rotorThickness: 10, // мм
+            statorThickness: 5, // мм
+            
+            // Инертные грузы
+            inertMassType: "none",
+            inertMassCount: 0,
+            inertMassWeight: 10, // грамм
+            inertMassRadius: 80, // % от радиуса ротора
+            
+            // Магниты
+            rotorMagnetType: "neodymium_n35",
+            statorMagnetType: "neodymium_n35",
+            rotorMixRatio: 100, // % основного типа
+            statorMixRatio: 100,
+            
+            // Геометрия магнитов
+            magnetWidth: 10,
+            magnetHeight: 15,
+            magnetLength: 20,
+            magnetAngle: 0,
+            
+            // Параметры симуляции
+            friction: 0.01,
+            timeStep: 0.005, // секунды
+            simulationTime: 2, // обороты
+            temperature: 20, // °C
+            isRunning: true,
+            isFullSimulation: false
+        };
+        
+        // Состояние системы
+        let state = {
+            rotorAngle: 0,
+            angularVelocity: 0,
+            angularAcceleration: 0,
+            time: 0,
+            simulationStep: 0,
+            totalSteps: 0,
+            systemTemperature: 20,
+            thermalEnergy: 0,
+            magnets: {
+                rotor: [],
+                stator: []
+            },
+            inertMasses: [],
+            previousStates: []
+        };
+        
+        // Константы
+        const MU0 = 4 * Math.PI * 1e-7; // Магнитная постоянная
+        const SCALE = 1.8; // Пикселей на мм
+        const DEG_TO_RAD = Math.PI / 180;
+        const RAD_TO_DEG = 180 / Math.PI;
+        
+        // Элементы управления
+        const controls = {};
+        const valueDisplays = {};
+        const dataDisplays = {};
+        
+        // Оптимизация
+        let optimization = {
+            isRunning: false,
+            progress: 0,
+            bestParams: null,
+            bestScore: -Infinity,
+            status: document.getElementById('optimizationStatus'),
+            progressBar: document.getElementById('optimizationProgress')
+        };
+        
+        // Инициализация системы
+        function initSystem() {
+            state.magnets.rotor = [];
+            state.magnets.stator = [];
+            state.inertMasses = [];
+            
+            const rotorRadius = params.rotorDiameter / 2;
+            let statorRadius;
+            
+            // Определяем радиус статора в зависимости от типа
+            if (params.statorType === "internal") {
+                statorRadius = rotorRadius - params.airGap - params.statorThickness;
+            } else { // external
+                statorRadius = rotorRadius + params.airGap + params.statorThickness;
+            }
+            
+            // Создаем магниты ротора со смешиванием типов
+            for (let i = 0; i < params.rotorMagnetCount; i++) {
+                const baseAngle = (2 * Math.PI * i) / params.rotorMagnetCount;
+                const polarity = i % 2 === 0 ? 1 : -1;
+                const magnetAngle = baseAngle + (params.magnetAngle * DEG_TO_RAD);
+                
+                // Определяем тип магнита с учетом смешивания
+                let magnetType = params.rotorMagnetType;
+                if (params.rotorMixRatio < 100) {
+                    const rand = Math.random() * 100;
+                    if (rand > params.rotorMixRatio) {
+                        // Выбираем случайный альтернативный тип
+                        const altTypes = Object.keys(MAGNET_TYPES).filter(t => t !== magnetType);
+                        if (altTypes.length > 0) {
+                            magnetType = altTypes[Math.floor(Math.random() * altTypes.length)];
+                        }
+                    }
+                }
+                
+                state.magnets.rotor.push({
+                    id: i,
+                    baseAngle: baseAngle,
+                    polarity: polarity,
+                    position: { x: 0, y: 0 },
+                    normalAngle: baseAngle,
+                    magnetAngle: magnetAngle,
+                    dimensions: {
+                        width: params.magnetWidth,
+                        height: params.magnetHeight,
+                        length: params.magnetLength
+                    },
+                    volume: params.magnetWidth * params.magnetHeight * params.magnetLength * 1e-9, // м³
+                    magnetType: magnetType,
+                    properties: MAGNET_TYPES[magnetType],
+                    magneticMoment: calculateMagneticMoment(magnetType, params.magnetWidth, params.magnetHeight, params.magnetLength),
+                    force: { x: 0, y: 0 },
+                    torque: 0,
+                    temperature: params.temperature,
+                    demagnetizationFactor: calculateDemagnetizationFactor(params.magnetWidth, params.magnetHeight, params.magnetLength)
+                });
+            }
+            
+            // Создаем магниты статора
+            for (let i = 0; i < params.statorMagnetCount; i++) {
+                const baseAngle = (2 * Math.PI * i) / params.statorMagnetCount;
+                const polarity = i % 2 === 0 ? 1 : -1;
+                const magnetAngle = baseAngle + (params.magnetAngle * DEG_TO_RAD);
+                
+                // Определяем тип магнита с учетом смешивания
+                let magnetType = params.statorMagnetType;
+                if (params.statorMixRatio < 100) {
+                    const rand = Math.random() * 100;
+                    if (rand > params.statorMixRatio) {
+                        const altTypes = Object.keys(MAGNET_TYPES).filter(t => t !== magnetType);
+                        if (altTypes.length > 0) {
+                            magnetType = altTypes[Math.floor(Math.random() * altTypes.length)];
+                        }
+                    }
+                }
+                
+                state.magnets.stator.push({
+                    id: i,
+                    baseAngle: baseAngle,
+                    polarity: polarity,
+                    position: {
+                        x: statorRadius * Math.cos(baseAngle),
+                        y: statorRadius * Math.sin(baseAngle)
+                    },
+                    normalAngle: baseAngle,
+                    magnetAngle: magnetAngle,
+                    dimensions: {
+                        width: params.magnetWidth,
+                        height: params.magnetHeight,
+                        length: params.magnetLength
+                    },
+                    volume: params.magnetWidth * params.magnetHeight * params.magnetLength * 1e-9,
+                    magnetType: magnetType,
+                    properties: MAGNET_TYPES[magnetType],
+                    magneticMoment: calculateMagneticMoment(magnetType, params.magnetWidth, params.magnetHeight, params.magnetLength),
+                    temperature: params.temperature,
+                    demagnetizationFactor: calculateDemagnetizationFactor(params.magnetWidth, params.magnetHeight, params.magnetLength)
+                });
+            }
+            
+            // Создаем инертные грузы
+            if (params.inertMassType !== "none" && params.inertMassCount > 0) {
+                const massRadius = (rotorRadius * params.inertMassRadius / 100);
+                const massMaterial = INERT_MATERIALS[params.inertMassType];
+                
+                for (let i = 0; i < params.inertMassCount; i++) {
+                    const angle = (2 * Math.PI * i) / params.inertMassCount;
+                    const massKg = params.inertMassWeight / 1000; // переводим в кг
+                    
+                    state.inertMasses.push({
+                        id: i,
+                        angle: angle,
+                        mass: massKg,
+                        radius: massRadius,
+                        material: massMaterial,
+                        position: { x: 0, y: 0 }
+                    });
+                }
+            }
+            
+            state.rotorAngle = params.startAngle * DEG_TO_RAD;
+            state.angularVelocity = 0;
+            state.angularAcceleration = 0;
+            state.time = 0;
+            state.simulationStep = 0;
+            state.systemTemperature = params.temperature;
+            state.previousStates = [];
+            
+            simulationHistory = {
+                time: [],
+                angle: [],
+                velocity: [],
+                torque: [],
+                temperature: [],
+                efficiency: []
+            };
+        }
+        
+        // Расчет магнитного момента с учетом температуры
+        function calculateMagneticMoment(magnetType, width, height, length) {
+            const props = MAGNET_TYPES[magnetType];
+            const volume = width * height * length * 1e-9; // м³
+            
+            // Коррекция на температуру
+            const tempCorrection = 1 + (params.temperature - 20) * (props.tempCoef / 100);
+            
+            // Магнитный момент = Br * V / μ₀ * коррекция
+            return props.Br * volume / MU0 * Math.max(0.1, tempCorrection);
+        }
+        
+        // Расчет фактора размагничивания
+        function calculateDemagnetizationFactor(width, height, length) {
+            // Упрощенный расчет для прямоугольного магнита
+            const a = Math.max(width, height, length) / 1000;
+            const b = Math.min(width, height, length) / 1000;
+            const ratio = a / b;
+            
+            if (ratio > 10) return 0.1;
+            if (ratio > 5) return 0.2;
+            if (ratio > 2) return 0.4;
+            if (ratio > 1) return 0.5;
+            return 0.6; // Для куба
+        }
+        
+        // Расчет силы с учетом материалов и температуры
+        function calculateMagneticForce(m1, m2, distance3D) {
+            const dx = m2.position.x - m1.position.x;
+            const dy = m2.position.y - m1.position.y;
+            const distance2D = Math.sqrt(dx * dx + dy * dy) / 1000; // переводим в метры
+            
+            if (distance2D < 1e-10) return { fx: 0, fy: 0, torque: 0 };
+            
+            // Коррекция на температуру
+            const tempCorrection1 = 1 + (m1.temperature - 20) * (m1.properties.tempCoef / 100);
+            const tempCorrection2 = 1 + (m2.temperature - 20) * (m2.properties.tempCoef / 100);
+            
+            // Эффективная диэлектрическая проницаемость (учет статора)
+            let effectiveMu = 1.0;
+            const statorMaterial = MATERIALS[params.statorMaterial];
+            if (statorMaterial) {
+                // Упрощенная модель влияния материала статора
+                effectiveMu = 1.0 + (statorMaterial.density / 10000); // Эмпирическая формула
+            }
+            
+            // Учет размагничивания
+            const demagFactor = (m1.demagnetizationFactor + m2.demagnetizationFactor) / 2;
+            
+            const effectiveDistance = Math.sqrt(distance2D * distance2D + distance3D * distance3D);
+            const nx = dx / (distance2D * 1000);
+            const ny = dy / (distance2D * 1000);
+            
+            // Магнитные моменты с коррекцией
+            const m1Effective = m1.magneticMoment * Math.max(0.1, tempCorrection1) * (1 - demagFactor);
+            const m2Effective = m2.magneticMoment * Math.max(0.1, tempCorrection2) * (1 - demagFactor);
+            
+            // Формула для силы между диполями с поправками
+            const prefactor = (3 * MU0 * effectiveMu * m1.polarity * m2.polarity) / 
+                            (4 * Math.PI * Math.pow(effectiveDistance, 4));
+            
+            // Векторные произведения
+            const m1DotR = m1Effective * (nx * Math.cos(m1.magnetAngle) + ny * Math.sin(m1.magnetAngle));
+            const m2DotR = m2Effective * (nx * Math.cos(m2.magnetAngle) + ny * Math.sin(m2.magnetAngle));
+            
+            const forceMagnitude = prefactor * (m1DotR * m2DotR);
+            
+            const fx = forceMagnitude * nx;
+            const fy = forceMagnitude * ny;
+            const torque = m1.position.x * fy - m1.position.y * fx;
+            
+            return {
+                fx: fx,
+                fy: fy,
+                torque: torque,
+                magnitude: Math.sqrt(fx * fx + fy * fy)
+            };
+        }
+        
+        // Расчет всех сил
+        function calculateForces() {
+            state.magnets.rotor.forEach(m => {
+                m.force.x = 0;
+                m.force.y = 0;
+                m.torque = 0;
+            });
+            
+            let totalTorque = 0;
+            let maxForce = 0;
+            let totalForceMagnitude = 0;
+            
+            for (let rotorMag of state.magnets.rotor) {
+                for (let statorMag of state.magnets.stator) {
+                    const distance3D = (rotorMag.dimensions.length + statorMag.dimensions.length) / 2 * 1e-3;
+                    const force = calculateMagneticForce(rotorMag, statorMag, distance3D);
+                    
+                    rotorMag.force.x += force.fx;
+                    rotorMag.force.y += force.fy;
+                    rotorMag.torque += force.torque;
+                    
+                    totalTorque += force.torque;
+                    maxForce = Math.max(maxForce, force.magnitude);
+                    totalForceMagnitude += force.magnitude;
+                }
+            }
+            
+            return { 
+                totalTorque, 
+                maxForce,
+                avgForce: totalForceMagnitude / (state.magnets.rotor.length * state.magnets.stator.length)
+            };
+        }
+        
+        // Расчет массы ротора
+        function calculateRotorMass() {
+            const rotorRadius = params.rotorDiameter / 2000; // м
+            const rotorThickness = params.rotorThickness / 1000; // м
+            const rotorMaterial = MATERIALS[params.rotorMaterial];
+            
+            // Масса диска
+            const diskVolume = Math.PI * rotorRadius * rotorRadius * rotorThickness;
+            const diskMass = diskVolume * rotorMaterial.density;
+            
+            // Масса магнитов
+            let magnetsMass = 0;
+            state.magnets.rotor.forEach(mag => {
+                const magnetVolume = mag.dimensions.width * mag.dimensions.height * 
+                                   mag.dimensions.length * 1e-9;
+                magnetsMass += magnetVolume * mag.properties.density;
+            });
+            
+            // Масса инертных грузов
+            let inertMass = 0;
+            state.inertMasses.forEach(mass => {
+                inertMass += mass.mass;
+            });
+            
+            return diskMass + magnetsMass + inertMass;
+        }
+        
+        // Расчет момента инерции
+        function calculateMomentOfInertia() {
+            const rotorRadius = params.rotorDiameter / 2000; // м
+            const rotorMass = calculateRotorMass();
+            
+            // Момент инерции диска
+            const diskInertia = 0.5 * rotorMass * rotorRadius * rotorRadius;
+            
+            // Добавляем момент инерции магнитов (точечные массы на радиусе)
+            let magnetsInertia = 0;
+            state.magnets.rotor.forEach(mag => {
+                const magnetVolume = mag.dimensions.width * mag.dimensions.height * 
+                                   mag.dimensions.length * 1e-9;
+                const magnetMass = magnetVolume * mag.properties.density;
+                magnetsInertia += magnetMass * rotorRadius * rotorRadius;
+            });
+            
+            // Добавляем момент инерции грузов
+            let massInertia = 0;
+            state.inertMasses.forEach(mass => {
+                massInertia += mass.mass * Math.pow(mass.radius / 1000, 2);
+            });
+            
+            return diskInertia + magnetsInertia + massInertia;
+        }
+        
+        // Обновление системы
+        function updateSystem(deltaTime) {
+            // Сохраняем предыдущее состояние
+            if (state.previousStates.length > 100) {
+                state.previousStates.shift();
+            }
+            
+            state.previousStates.push({
+                angle: state.rotorAngle,
+                velocity: state.angularVelocity,
+                acceleration: state.angularAcceleration,
+                time: state.time
+            });
+            
+            // Расчет сил
+            const { totalTorque, maxForce, avgForce } = calculateForces();
+            
+            // Момент инерции
+            const momentOfInertia = calculateMomentOfInertia();
+            
+            // Динамическое трение
+            const frictionTorque = -params.friction * state.angularVelocity - 
+                                0.001 * Math.sign(state.angularVelocity) * state.angularVelocity * state.angularVelocity;
+            
+            // Угловое ускорение
+            let angularAcceleration = (totalTorque + frictionTorque) / momentOfInertia;
+            
+            // Сглаживание
+            const alpha = 0.3;
+            state.angularAcceleration = alpha * angularAcceleration + (1 - alpha) * state.angularAcceleration;
+            
+            // Интегрирование методом Верле
+            if (state.previousStates.length >= 2) {
+                const prev1 = state.previousStates[state.previousStates.length - 1];
+                const prev2 = state.previousStates[state.previousStates.length - 2];
+                const dt = prev1.time - prev2.time;
+                
+                if (dt > 0) {
+                    state.angularVelocity += state.angularAcceleration * deltaTime;
+                    state.rotorAngle += state.angularVelocity * deltaTime + 
+                                      0.5 * state.angularAcceleration * deltaTime * deltaTime;
+                }
+            } else {
+                state.angularVelocity += state.angularAcceleration * deltaTime;
+                state.rotorAngle += state.angularVelocity * deltaTime;
+            }
+            
+            // Нормализация угла
+            state.rotorAngle %= (2 * Math.PI);
+            if (state.rotorAngle < 0) state.rotorAngle += 2 * Math.PI;
+            
+            // Обновление времени
+            state.time += deltaTime;
+            state.simulationStep++;
+            
+            // Обновление позиций
+            const rotorRadius = params.rotorDiameter / 2;
+            state.magnets.rotor.forEach((mag, i) => {
+                const currentAngle = mag.baseAngle + state.rotorAngle;
+                mag.position.x = rotorRadius * Math.cos(currentAngle);
+                mag.position.y = rotorRadius * Math.sin(currentAngle);
+                mag.magnetAngle = currentAngle + (params.magnetAngle * DEG_TO_RAD);
+            });
+            
+            // Обновление позиций грузов
+            state.inertMasses.forEach(mass => {
+                const currentAngle = mass.angle + state.rotorAngle;
+                mass.position.x = mass.radius * Math.cos(currentAngle);
+                mass.position.y = mass.radius * Math.sin(currentAngle);
+            });
+            
+            // Расчет стабильности
+            const stability = calculateStability();
+            
+            // Расчет КПД
+            const inputPower = Math.abs(totalTorque * state.angularVelocity);
+            const frictionPower = Math.abs(frictionTorque * state.angularVelocity);
+            const efficiency = inputPower > 0 ? 
+                Math.max(0, (inputPower - frictionPower) / inputPower * 100) : 0;
+            
+            // Расчет кинетической энергии
+            const kineticEnergy = 0.5 * momentOfInertia * state.angularVelocity * state.angularVelocity;
+            
+            // Тепловой расчет
+            updateTemperature(deltaTime, frictionPower);
+            
+            // Сохранение в историю
+            simulationHistory.time.push(state.time);
+            simulationHistory.angle.push(state.rotorAngle);
+            simulationHistory.velocity.push(state.angularVelocity);
+            simulationHistory.torque.push(totalTorque);
+            simulationHistory.temperature.push(state.systemTemperature);
+            simulationHistory.efficiency.push(efficiency);
+            
+            if (simulationHistory.time.length > 1000) {
+                simulationHistory.time.shift();
+                simulationHistory.angle.shift();
+                simulationHistory.velocity.shift();
+                simulationHistory.torque.shift();
+                simulationHistory.temperature.shift();
+                simulationHistory.efficiency.shift();
+            }
+            
+            return {
+                totalTorque,
+                maxForce,
+                angularVelocity: state.angularVelocity,
+                angularAcceleration: state.angularAcceleration,
+                kineticEnergy,
+                efficiency,
+                stability,
+                momentOfInertia,
+                rotorMass: calculateRotorMass()
+            };
+        }
+        
+        // Расчет стабильности
+        function calculateStability() {
+            if (state.previousStates.length < 10) return 100;
+            
+            const recentStates = state.previousStates.slice(-10);
+            const velocities = recentStates.map(s => s.velocity);
+            const meanVelocity = velocities.reduce((a, b) => a + b, 0) / velocities.length;
+            
+            if (Math.abs(meanVelocity) < 0.001) return 0;
+            
+            const variance = velocities.reduce((sum, v) => sum + Math.pow(v - meanVelocity, 2), 0) / velocities.length;
+            const stdDev = Math.sqrt(variance);
+            const cv = stdDev / Math.abs(meanVelocity);
+            
+            return Math.max(0, 100 * (1 - cv));
+        }
+        
+        // Тепловой расчет
+        function updateTemperature(deltaTime, frictionPower) {
+            // Тепловыделение от трения
+            const heatInput = frictionPower * deltaTime * 0.5; // 50% превращается в тепло
+            
+            // Тепловыделение от магнитных потерь (гистерезис, вихревые токи)
+            const magneticLosses = Math.abs(state.angularVelocity) * 0.01; // Эмпирическая формула
+            
+            // Общее тепловыделение
+            const totalHeat = heatInput + magneticLosses;
+            
+            // Теплоемкость системы
+            const rotorMaterial = MATERIALS[params.rotorMaterial];
+            const statorMaterial = MATERIALS[params.statorMaterial];
+            const rotorMass = calculateRotorMass();
+            
+            let totalHeatCapacity = 0;
+            
+            // Теплоемкость ротора
+            totalHeatCapacity += rotorMass * rotorMaterial.specificHeat;
+            
+            // Теплоемкость магнитов (упрощенно)
+            state.magnets.rotor.forEach(mag => {
+                const magnetMass = mag.volume * mag.properties.density;
+                totalHeatCapacity += magnetMass * 450; // Примерная удельная теплоемкость
+            });
+            
+            state.magnets.stator.forEach(mag => {
+                const magnetMass = mag.volume * mag.properties.density;
+                totalHeatCapacity += magnetMass * 450;
+            });
+            
+            // Расчет изменения температуры
+            if (totalHeatCapacity > 0) {
+                const deltaTemp = totalHeat / totalHeatCapacity;
+                state.systemTemperature += deltaTemp;
+                
+                // Ограничение максимальной температуры по материалам
+                const maxTemp = Math.min(
+                    rotorMaterial.maxTemp,
+                    statorMaterial.maxTemp,
+                    ...state.magnets.rotor.map(m => m.properties.maxTemp),
+                    ...state.magnets.stator.map(m => m.properties.maxTemp)
+                );
+                
+                state.systemTemperature = Math.min(state.systemTemperature, maxTemp);
+                
+                // Охлаждение (конвекция)
+                const coolingRate = 0.01; // Коэффициент охлаждения
+                state.systemTemperature -= (state.systemTemperature - params.temperature) * coolingRate * deltaTime;
+            }
+            
+            // Обновление температуры магнитов
+            state.magnets.rotor.forEach(mag => {
+                mag.temperature = state.systemTemperature;
+            });
+            
+            state.magnets.stator.forEach(mag => {
+                mag.temperature = state.systemTemperature;
+            });
+        }
+        
+        // Отрисовка системы
+        function renderSystem() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const rotorRadius = (params.rotorDiameter / 2) * SCALE;
+            let statorRadius;
+            
+            if (params.statorType === "internal") {
+                statorRadius = rotorRadius - params.airGap * SCALE - params.statorThickness * SCALE;
+            } else {
+                statorRadius = rotorRadius + params.airGap * SCALE + params.statorThickness * SCALE;
+            }
+            
+            // Рисуем статор
+            const statorMaterial = MATERIALS[params.statorMaterial];
+            ctx.fillStyle = statorMaterial.color + "80";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, statorRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Магниты статора
+            state.magnets.stator.forEach(mag => {
+                const x = centerX + mag.position.x * SCALE;
+                const y = centerY + mag.position.y * SCALE;
+                const drawAngle = mag.magnetAngle;
+                const width = mag.dimensions.width * SCALE;
+                const height = mag.dimensions.height * SCALE;
+                
+                const color = mag.properties.color;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(drawAngle);
+                ctx.fillStyle = color + "CC";
+                ctx.fillRect(-width/2, -height/2, width, height);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-width/2, -height/2, width, height);
+                
+                // Обозначение полюса
+                ctx.fillStyle = 'white';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(mag.polarity > 0 ? 'N' : 'S', 0, 0);
+                ctx.restore();
+            });
+            
+            // Рисуем ротор
+            const rotorMaterial = MATERIALS[params.rotorMaterial];
+            ctx.fillStyle = rotorMaterial.color + "80";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, rotorRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Магниты ротора
+            state.magnets.rotor.forEach(mag => {
+                const x = centerX + mag.position.x * SCALE;
+                const y = centerY + mag.position.y * SCALE;
+                const drawAngle = mag.magnetAngle;
+                const width = mag.dimensions.width * SCALE;
+                const height = mag.dimensions.height * SCALE;
+                
+                const color = mag.properties.color;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(drawAngle);
+                ctx.fillStyle = color;
+                ctx.fillRect(-width/2, -height/2, width, height);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-width/2, -height/2, width, height);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(mag.polarity > 0 ? 'N' : 'S', 0, 0);
+                
+                // Магнитный тип (сокращенное обозначение)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '8px Arial';
+                let typeLabel = mag.properties.name.substring(0, 3);
+                if (typeLabel === 'Нео') typeLabel = 'Nd';
+                if (typeLabel === 'Фер') typeLabel = 'Fe';
+                if (typeLabel === 'Сам') typeLabel = 'Sm';
+                if (typeLabel === 'Аль') typeLabel = 'Al';
+                ctx.fillText(typeLabel, 0, height/2 + 10);
+                ctx.restore();
+            });
+            
+            // Инертные грузы
+            state.inertMasses.forEach(mass => {
+                const x = centerX + mass.position.x * SCALE;
+                const y = centerY + mass.position.y * SCALE;
+                const radius = Math.sqrt(mass.mass * 10) * SCALE / 2; // Размер пропорционален массе
+                
+                ctx.fillStyle = mass.material.color;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+            
+            // Информация
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(`Тип: ${params.statorType === "internal" ? "Внутр." : "Внешн."}`, 10, 10);
+            ctx.fillText(`Темп: ${state.systemTemperature.toFixed(1)}°C`, 10, 30);
+            ctx.fillText(`Шаг: ${state.simulationStep}`, 10, 50);
+        }
+        
+        // Отрисовка графиков
+        function renderGraphs() {
+            graphCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            graphCtx.fillRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            if (simulationHistory.time.length < 2) return;
+            
+            const margin = 40;
+            const graphWidth = graphCanvas.width - 2 * margin;
+            const graphHeight = graphCanvas.height - 2 * margin;
+            
+            // Находим диапазоны
+            const timeRange = { min: Math.min(...simulationHistory.time), max: Math.max(...simulationHistory.time) };
+            const velocityRange = { min: Math.min(...simulationHistory.velocity), max: Math.max(...simulationHistory.velocity) };
+            const tempRange = { min: Math.min(...simulationHistory.temperature), max: Math.max(...simulationHistory.temperature) };
+            
+            const scaleX = (time) => margin + (time - timeRange.min) / (timeRange.max - timeRange.min) * graphWidth;
+            const scaleVelocity = (v) => margin + graphHeight - (v - velocityRange.min) / (velocityRange.max - velocityRange.min) * graphHeight;
+            const scaleTemp = (t) => margin + graphHeight - (t - tempRange.min) / (tempRange.max - tempRange.min) * graphHeight;
+            
+            // Ось времени
+            graphCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            graphCtx.lineWidth = 1;
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin, margin + graphHeight);
+            graphCtx.lineTo(margin + graphWidth, margin + graphHeight);
+            graphCtx.stroke();
+            
+            // График скорости
+            graphCtx.strokeStyle = 'rgba(100, 255, 100, 0.8)';
+            graphCtx.lineWidth = 2;
+            graphCtx.beginPath();
+            
+            for (let i = 0; i < simulationHistory.time.length; i++) {
+                const x = scaleX(simulationHistory.time[i]);
+                const y = scaleVelocity(simulationHistory.velocity[i]);
+                
+                if (i === 0) {
+                    graphCtx.moveTo(x, y);
+                } else {
+                    graphCtx.lineTo(x, y);
+                }
+            }
+            graphCtx.stroke();
+            
+            // График температуры
+            graphCtx.strokeStyle = 'rgba(255, 100, 100, 0.8)';
+            graphCtx.lineWidth = 2;
+            graphCtx.beginPath();
+            
+            for (let i = 0; i < simulationHistory.time.length; i++) {
+                const x = scaleX(simulationHistory.time[i]);
+                const y = scaleTemp(simulationHistory.temperature[i]);
+                
+                if (i === 0) {
+                    graphCtx.moveTo(x, y);
+                } else {
+                    graphCtx.lineTo(x, y);
+                }
+            }
+            graphCtx.stroke();
+            
+            // Подписи
+            graphCtx.fillStyle = 'white';
+            graphCtx.font = '12px Arial';
+            graphCtx.textAlign = 'left';
+            graphCtx.fillText('Скорость (рад/с)', margin, margin - 10);
+            graphCtx.fillText('Температура (°C)', margin + 100, margin - 10);
+        }
+        
+        // Обновление отображаемых данных
+        function updateDisplays(data) {
+            const rpm = Math.abs(data.angularVelocity) * 60 / (2 * Math.PI);
+            
+            dataDisplays.rotorPosition.textContent = `${(state.rotorAngle * RAD_TO_DEG).toFixed(2)}°`;
+            dataDisplays.angularVelocity.textContent = `${data.angularVelocity.toFixed(3)} рад/с`;
+            dataDisplays.angularAcceleration.textContent = `${data.angularAcceleration.toFixed(3)} рад/с²`;
+            dataDisplays.totalTorque.textContent = `${data.totalTorque.toFixed(4)} Н·м`;
+            dataDisplays.maxForce.textContent = `${data.maxForce.toFixed(4)} Н`;
+            dataDisplays.kineticEnergy.textContent = `${data.kineticEnergy.toFixed(6)} Дж`;
+            dataDisplays.rotationFrequency.textContent = 
+                `${(Math.abs(data.angularVelocity) / (2 * Math.PI)).toFixed(3)} Гц (${rpm.toFixed(1)} об/мин)`;
+            dataDisplays.efficiency.textContent = `${data.efficiency.toFixed(2)}%`;
+            dataDisplays.stability.textContent = `${data.stability.toFixed(2)}%`;
+            dataDisplays.rotorMass.textContent = `${data.rotorMass.toFixed(4)} кг`;
+            dataDisplays.momentOfInertia.textContent = `${data.momentOfInertia.toFixed(6)} кг·м²`;
+            dataDisplays.temperatureDisplay.textContent = `${state.systemTemperature.toFixed(1)} °C`;
+            dataDisplays.simulationTimeDisplay.textContent = `${state.time.toFixed(2)} с`;
+        }
+        
+        // Обновление свойств магнитов
+        function updateMagnetPropertiesDisplay(magnetType) {
+            const props = MAGNET_TYPES[magnetType];
+            document.getElementById('currentMagnetType').textContent = props.name;
+            document.getElementById('currentBr').textContent = `${props.Br.toFixed(2)} T`;
+            document.getElementById('currentHc').textContent = `${props.Hc} kA/m`;
+            document.getElementById('currentBHmax').textContent = `${props.BHmax} kJ/m³`;
+            document.getElementById('currentTempCoef').textContent = `${props.tempCoef} %/°C`;
+            document.getElementById('currentMaxTemp').textContent = `${props.maxTemp} °C`;
+        }
+        
+        // Инициализация управления
+        function initControls() {
+            // Собираем все элементы управления
+            const controlIds = [
+                'statorType', 'rotorMagnetCount', 'statorMagnetCount', 'rotorDiameter', 'airGap', 'startAngle',
+                'rotorMaterial', 'statorMaterial', 'rotorThickness', 'statorThickness',
+                'inertMassType', 'inertMassCount', 'inertMassWeight', 'inertMassRadius',
+                'magnetWidth', 'magnetHeight', 'magnetLength', 'magnetAngle',
+                'simulationTime', 'timeStep', 'friction', 'temperature',
+                'rotorMixRatio', 'statorMixRatio'
+            ];
+            
+            controlIds.forEach(id => {
+                controls[id] = document.getElementById(id);
+                if (controls[id]) {
+                    // Для элементов с value-display
+                    const valueDisplay = document.getElementById(id + 'Value');
+                    if (valueDisplay) {
+                        valueDisplays[id] = valueDisplay;
+                    }
+                }
+            });
+            
+            // Собираем элементы отображения данных
+            const displayIds = [
+                'rotorPosition', 'angularVelocity', 'angularAcceleration', 'totalTorque',
+                'maxForce', 'kineticEnergy', 'rotationFrequency', 'efficiency',
+                'stability', 'rotorMass', 'momentOfInertia', 'temperatureDisplay',
+                'simulationTimeDisplay'
+            ];
+            
+            displayIds.forEach(id => {
+                dataDisplays[id] = document.getElementById(id);
+            });
+            
+            // Кнопки
+            controls.resetBtn = document.getElementById('resetBtn');
+            controls.togglePauseBtn = document.getElementById('togglePauseBtn');
+            controls.exportBtn = document.getElementById('exportBtn');
+            controls.runFullSimulationBtn = document.getElementById('runFullSimulationBtn');
+            controls.optimizeParamsBtn = document.getElementById('optimizeParamsBtn');
+            controls.targetRPM = document.getElementById('targetRPM');
+        }
+        
+        // Настройка вкладок
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Деактивируем все вкладки
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Активируем выбранную
+                    tab.classList.add('active');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+        }
+        
+        // Настройка выбора типов магнитов
+        function setupMagnetTypeSelectors() {
+            // Ротор
+            const rotorBtns = document.querySelectorAll('#rotorMagnetTypeSelector .magnet-type-btn');
+            rotorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    rotorBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    params.rotorMagnetType = btn.getAttribute('data-type');
+                    updateMagnetPropertiesDisplay(params.rotorMagnetType);
+                    initSystem();
+                });
+            });
+            
+            // Статор
+            const statorBtns = document.querySelectorAll('#statorMagnetTypeSelector .magnet-type-btn');
+            statorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    statorBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    params.statorMagnetType = btn.getAttribute('data-type');
+                    updateMagnetPropertiesDisplay(params.statorMagnetType);
+                    initSystem();
+                });
+            });
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Основные параметры
+            controls.rotorMagnetCount.addEventListener('input', function() {
+                params.rotorMagnetCount = parseInt(this.value);
+                valueDisplays.rotorMagnetCount.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.statorMagnetCount.addEventListener('input', function() {
+                params.statorMagnetCount = parseInt(this.value);
+                valueDisplays.statorMagnetCount.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.rotorDiameter.addEventListener('input', function() {
+                params.rotorDiameter = parseInt(this.value);
+                valueDisplays.rotorDiameter.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.airGap.addEventListener('input', function() {
+                params.airGap = parseFloat(this.value);
+                valueDisplays.airGap.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.startAngle.addEventListener('input', function() {
+                params.startAngle = parseInt(this.value);
+                valueDisplays.startAngle.textContent = this.value;
+                state.rotorAngle = params.startAngle * DEG_TO_RAD;
+            });
+            
+            controls.statorType.addEventListener('change', function() {
+                params.statorType = this.value;
+                initSystem();
+            });
+            
+            // Материалы
+            controls.rotorMaterial.addEventListener('change', function() {
+                params.rotorMaterial = this.value;
+                initSystem();
+            });
+            
+            controls.statorMaterial.addEventListener('change', function() {
+                params.statorMaterial = this.value;
+                initSystem();
+            });
+            
+            controls.rotorThickness.addEventListener('input', function() {
+                params.rotorThickness = parseFloat(this.value);
+                valueDisplays.rotorThickness.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.statorThickness.addEventListener('input', function() {
+                params.statorThickness = parseFloat(this.value);
+                valueDisplays.statorThickness.textContent = this.value;
+                initSystem();
+            });
+            
+            // Инертные грузы
+            controls.inertMassType.addEventListener('change', function() {
+                params.inertMassType = this.value;
+                initSystem();
+            });
+            
+            controls.inertMassCount.addEventListener('input', function() {
+                params.inertMassCount = parseInt(this.value);
+                valueDisplays.inertMassCount.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.inertMassWeight.addEventListener('input', function() {
+                params.inertMassWeight = parseInt(this.value);
+                valueDisplays.inertMassWeight.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.inertMassRadius.addEventListener('input', function() {
+                params.inertMassRadius = parseInt(this.value);
+                valueDisplays.inertMassRadius.textContent = this.value;
+                initSystem();
+            });
+            
+            // Геометрия магнитов
+            controls.magnetWidth.addEventListener('change', function() {
+                params.magnetWidth = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetHeight.addEventListener('change', function() {
+                params.magnetHeight = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetLength.addEventListener('change', function() {
+                params.magnetLength = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetAngle.addEventListener('change', function() {
+                params.magnetAngle = parseInt(this.value);
+                initSystem();
+            });
+            
+            // Смешивание магнитов
+            controls.rotorMixRatio.addEventListener('input', function() {
+                params.rotorMixRatio = parseInt(this.value);
+                valueDisplays.rotorMixRatio.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.statorMixRatio.addEventListener('input', function() {
+                params.statorMixRatio = parseInt(this.value);
+                valueDisplays.statorMixRatio.textContent = this.value;
+                initSystem();
+            });
+            
+            // Параметры симуляции
+            controls.simulationTime.addEventListener('input', function() {
+                params.simulationTime = parseFloat(this.value);
+                valueDisplays.simulationTime.textContent = this.value;
+            });
+            
+            controls.timeStep.addEventListener('input', function() {
+                params.timeStep = parseInt(this.value) / 1000;
+                valueDisplays.timeStep.textContent = this.value;
+            });
+            
+            controls.friction.addEventListener('input', function() {
+                params.friction = parseFloat(this.value);
+                valueDisplays.friction.textContent = this.value;
+            });
+            
+            controls.temperature.addEventListener('input', function() {
+                params.temperature = parseInt(this.value);
+                valueDisplays.temperature.textContent = this.value;
+                state.systemTemperature = params.temperature;
+            });
+            
+            // Кнопки
+            controls.resetBtn.addEventListener('click', function() {
+                state.rotorAngle = params.startAngle * DEG_TO_RAD;
+                state.angularVelocity = 0;
+                state.angularAcceleration = 0;
+                state.time = 0;
+                state.simulationStep = 0;
+                state.systemTemperature = params.temperature;
+                initSystem();
+            });
+            
+            controls.togglePauseBtn.addEventListener('click', function() {
+                params.isRunning = !params.isRunning;
+                this.textContent = params.isRunning ? 'Пауза' : 'Продолжить';
+            });
+            
+            controls.exportBtn.addEventListener('click', exportData);
+            
+            controls.runFullSimulationBtn.addEventListener('click', async function() {
+                if (!optimization.isRunning) {
+                    await runFullSimulation();
+                }
+            });
+            
+            controls.optimizeParamsBtn.addEventListener('click', async function() {
+                if (!optimization.isRunning) {
+                    await optimizeParameters();
+                }
+            });
+        }
+        
+        // Полная симуляция (упрощенная версия)
+        async function runFullSimulation() {
+            params.isRunning = false;
+            optimization.isRunning = true;
+            
+            const startTime = performance.now();
+            const targetRevolutions = params.simulationTime;
+            const targetAngle = targetRevolutions * 2 * Math.PI;
+            const maxSteps = 10000;
+            
+            const initialState = JSON.parse(JSON.stringify(state));
+            let step = 0;
+            let revolutions = 0;
+            let lastAngle = state.rotorAngle;
+            
+            while (step < maxSteps && revolutions < targetRevolutions) {
+                const data = updateSystem(params.timeStep);
+                
+                // Считаем обороты
+                const angleDiff = Math.abs(state.rotorAngle - lastAngle);
+                if (angleDiff > Math.PI) {
+                    revolutions += 0.5;
+                }
+                lastAngle = state.rotorAngle;
+                
+                if (step % 50 === 0) {
+                    updateDisplays(data);
+                    renderSystem();
+                    renderGraphs();
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+                
+                step++;
+                
+                if (Math.abs(data.angularVelocity) < 0.001 && step > 100) {
+                    addStatusMessage(`Вращение остановилось на шаге ${step}`);
+                    break;
+                }
+            }
+            
+            const endTime = performance.now();
+            const simulationTime = (endTime - startTime) / 1000;
+            
+            addStatusMessage(`Симуляция завершена за ${simulationTime.toFixed(2)} с`);
+            addStatusMessage(`Выполнено оборотов: ${revolutions.toFixed(2)}`);
+            
+            params.isRunning = true;
+            optimization.isRunning = false;
+            
+            return { success: revolutions >= targetRevolutions, revolutions: revolutions };
+        }
+        
+        // Оптимизация параметров (упрощенная версия)
+        async function optimizeParameters() {
+            if (optimization.isRunning) return;
+            
+            optimization.isRunning = true;
+            addStatusMessage("Начинаем оптимизацию...");
+            
+            const originalParams = JSON.parse(JSON.stringify(params));
+            const targetRPM = parseFloat(controls.targetRPM.value);
+            
+            // Простой перебор некоторых параметров
+            const testConfigs = [
+                { rotorMagnetCount: 4, statorMagnetCount: 6, magnetAngle: 15 },
+                { rotorMagnetCount: 6, statorMagnetCount: 8, magnetAngle: 10 },
+                { rotorMagnetCount: 8, statorMagnetCount: 12, magnetAngle: 5 },
+                { rotorMagnetCount: 10, statorMagnetCount: 14, magnetAngle: 0 },
+                { rotorMagnetCount: 12, statorMagnetCount: 16, magnetAngle: -5 }
+            ];
+            
+            let bestConfig = null;
+            let bestScore = -Infinity;
+            
+            for (let i = 0; i < testConfigs.length; i++) {
+                const config = testConfigs[i];
+                
+                // Применяем конфигурацию
+                Object.assign(params, config);
+                updateParamDisplays();
+                initSystem();
+                
+                // Запускаем короткую симуляцию
+                const result = await runShortSimulation(0.5);
+                
+                // Оцениваем результат
+                const score = Math.abs(result.avgVelocity * 60 / (2 * Math.PI) - targetRPM);
+                
+                addStatusMessage(`Конфигурация ${i+1}: ${score.toFixed(1)} об/мин от цели`);
+                
+                if (score < bestScore || bestConfig === null) {
+                    bestScore = score;
+                    bestConfig = config;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Применяем лучшую конфигурацию
+            if (bestConfig) {
+                Object.assign(params, bestConfig);
+                updateParamDisplays();
+                initSystem();
+                addStatusMessage("✓ Оптимизация завершена!");
+            } else {
+                params = JSON.parse(JSON.stringify(originalParams));
+                updateParamDisplays();
+                initSystem();
+            }
+            
+            optimization.isRunning = false;
+        }
+        
+        // Короткая симуляция
+        async function runShortSimulation(revolutions) {
+            const initialState = JSON.parse(JSON.stringify(state));
+            const targetSteps = 200;
+            let step = 0;
+            const velocities = [];
+            
+            while (step < targetSteps) {
+                const data = updateSystem(params.timeStep);
+                velocities.push(data.angularVelocity);
+                step++;
+            }
+            
+            // Восстанавливаем состояние
+            Object.assign(state, initialState);
+            
+            return {
+                velocities: velocities,
+                avgVelocity: velocities.reduce((a, b) => a + b, 0) / velocities.length
+            };
+        }
+        
+        // Добавление сообщения в статус
+        function addStatusMessage(message) {
+            const statusItem = document.createElement('div');
+            statusItem.className = 'status-item';
+            statusItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            optimization.status.appendChild(statusItem);
+            optimization.status.scrollTop = optimization.status.scrollHeight;
+        }
+        
+        // Экспорт данных
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                parameters: params,
+                materials: {
+                    rotor: MATERIALS[params.rotorMaterial],
+                    stator: MATERIALS[params.statorMaterial]
+                },
+                magnets: {
+                    rotor: MAGNET_TYPES[params.rotorMagnetType],
+                    stator: MAGNET_TYPES[params.statorMagnetType]
+                },
+                simulationHistory: simulationHistory,
+                currentState: state
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `magnetic_sim_advanced_${new Date().getTime()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Главный цикл анимации
+        function animate() {
+            if (params.isRunning && !optimization.isRunning) {
+                const data = updateSystem(params.timeStep);
+                updateDisplays(data);
+            }
+            
+            renderSystem();
+            renderGraphs();
+            requestAnimationFrame(animate);
+        }
+        
+        // Инициализация и запуск
+        function init() {
+            initControls();
+            setupTabs();
+            setupMagnetTypeSelectors();
+            initSystem();
+            setupEventListeners();
+            updateMagnetPropertiesDisplay(params.rotorMagnetType);
+            animate();
+        }
+        
+        // Запуск приложения
+        init();
+    </script>
+</body>
+</html>
