@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Симулятор магнитного ротора-статора с объемными расчетами</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 900px;
+        }
+        
+        .simulation-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1, h2, h3, h4 {
+            margin-top: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .subsection {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+        
+        .slider-container {
+            margin: 12px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .value-display {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .dimension-input, .material-input {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .dimension-input input[type="number"],
+        .material-input select,
+        .material-input input[type="number"] {
+            width: 70px;
+            padding: 6px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+        }
+        
+        .material-input select {
+            width: 120px;
+            padding: 5px;
+        }
+        
+        #simulationCanvas {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            width: 100%;
+            height: 500px;
+            display: block;
+            cursor: grab;
+        }
+        
+        #simulationCanvas:active {
+            cursor: grabbing;
+        }
+        
+        .data-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            flex-grow: 1;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .step-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .step-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .step-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .color-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .camera-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .camera-button {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+        
+        .camera-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: rgba(100, 200, 255, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                max-height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>3D Симулятор магнитного ротора-статора с объемными расчетами</h1>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="tab-container">
+                <div class="tab active" data-tab="general">Основные</div>
+                <div class="tab" data-tab="geometry">Геометрия</div>
+                <div class="tab" data-tab="simulation">Симуляция</div>
+            </div>
+            
+            <div id="general-tab" class="tab-content active">
+                <div class="section">
+                    <h3>Конфигурация системы</h3>
+                    <div class="slider-container">
+                        <label>Тип статора: 
+                            <select id="statorType" style="width: 150px; float: right; padding: 5px;">
+                                <option value="internal">Внутренний</option>
+                                <option value="external">Внешний</option>
+                            </select>
+                        </label>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество магнитов на роторе: <span class="value-display" id="rotorMagnetCountValue">6</span></label>
+                        <input type="range" id="rotorMagnetCount" min="2" max="24" value="6" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество магнитов на статоре: <span class="value-display" id="statorMagnetCountValue">8</span></label>
+                        <input type="range" id="statorMagnetCount" min="2" max="24" value="8" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Диаметр ротора (мм): <span class="value-display" id="rotorDiameterValue">150</span></label>
+                        <input type="range" id="rotorDiameter" min="50" max="300" value="150" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Воздушный зазор (мм): <span class="value-display" id="airGapValue">5</span></label>
+                        <input type="range" id="airGap" min="1" max="20" value="5" step="0.5">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Начальный угол ротора (град): <span class="value-display" id="startAngleValue">0</span></label>
+                        <input type="range" id="startAngle" min="0" max="360" value="0" step="1">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>3D Камера</h3>
+                    <div class="camera-controls">
+                        <button class="camera-button" id="cameraTop">Вид сверху</button>
+                        <button class="camera-button" id="cameraFront">Вид спереди</button>
+                        <button class="camera-button" id="cameraSide">Вид сбоку</button>
+                        <button class="camera-button" id="cameraIsometric">Изометрия</button>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Вращение камеры X: <span class="value-display" id="cameraXRotValue">30</span>°</label>
+                        <input type="range" id="cameraXRot" min="-90" max="90" value="30" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Вращение камеры Y: <span class="value-display" id="cameraYRotValue">45</span>°</label>
+                        <input type="range" id="cameraYRot" min="0" max="360" value="45" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Приближение: <span class="value-display" id="cameraZoomValue">300</span></label>
+                        <input type="range" id="cameraZoom" min="100" max="1000" value="300" step="10">
+                    </div>
+                </div>
+                
+                <div class="color-legend">
+                    <div class="color-item">
+                        <div class="color-box" style="background: #ff4444;"></div>
+                        <span>Северный полюс</span>
+                    </div>
+                    <div class="color-item">
+                        <div class="color-box" style="background: #4444ff;"></div>
+                        <span>Южный полюс</span>
+                    </div>
+                    <div class="color-item">
+                        <div class="color-box" style="background: #888888;"></div>
+                        <span>Ротор</span>
+                    </div>
+                    <div class="color-item">
+                        <div class="color-box" style="background: #aaaaaa;"></div>
+                        <span>Статор</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="geometry-tab" class="tab-content">
+                <div class="section">
+                    <h3>Геометрия магнитов</h3>
+                    <div class="input-group">
+                        <div class="dimension-input">
+                            <label>Ширина (мм):</label>
+                            <input type="number" id="magnetWidth" value="12" min="1" max="50" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Толщина (мм):</label>
+                            <input type="number" id="magnetThickness" value="8" min="1" max="50" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Длина (мм):</label>
+                            <input type="number" id="magnetLength" value="25" min="1" max="100" step="1">
+                        </div>
+                        <div class="dimension-input">
+                            <label>Угол (град):</label>
+                            <input type="number" id="magnetAngle" value="0" min="-45" max="45" step="1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Модель расчета</h3>
+                    <div class="slider-container">
+                        <label>Детализация расчета: <span class="value-display" id="calculationDetailValue">8</span></label>
+                        <input type="range" id="calculationDetail" min="1" max="20" value="8" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Интегральных точек: <span class="value-display" id="integrationPointsValue">27</span></label>
+                        <input type="range" id="integrationPoints" min="8" max="64" value="27" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Показывать магнитные линии: 
+                            <input type="checkbox" id="showFieldLines" checked style="float: right;">
+                        </label>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Количество линий: <span class="value-display" id="fieldLinesCountValue">20</span></label>
+                        <input type="range" id="fieldLinesCount" min="5" max="50" value="20" step="1">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="simulation-tab" class="tab-content">
+                <div class="section">
+                    <h3>Параметры симуляции</h3>
+                    <div class="slider-container">
+                        <label>Шаг времени (мс): <span class="value-display" id="timeStepValue">16</span></label>
+                        <input type="range" id="timeStep" min="1" max="100" value="16" step="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Трение: <span class="value-display" id="frictionValue">0.01</span></label>
+                        <input type="range" id="friction" min="0" max="0.1" value="0.01" step="0.001">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>Сила магнитов (коэф.): <span class="value-display" id="magnetStrengthValue">1.0</span></label>
+                        <input type="range" id="magnetStrength" min="0.1" max="3.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Пошаговый режим</h3>
+                    <div class="slider-container">
+                        <label>Текущий шаг: <span class="value-display" id="currentStepValue">0</span></label>
+                        <input type="range" id="currentStep" min="0" max="100" value="0" step="1">
+                    </div>
+                    
+                    <div class="step-controls">
+                        <button class="step-button" id="stepBackward">← Шаг назад</button>
+                        <button class="step-button" id="playPause">▶ Воспроизвести</button>
+                        <button class="step-button" id="stepForward">Шаг вперед →</button>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="button" id="resetStep">Сбросить шаги</button>
+                        <button class="button" id="recordSteps">Записать 100 шагов</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Управление</h3>
+                    <div class="button-group">
+                        <button class="button" id="resetBtn">Сбросить систему</button>
+                        <button class="button" id="exportBtn">Экспорт данных</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="simulation-area">
+            <h2>3D Визуализация</h2>
+            <canvas id="simulationCanvas"></canvas>
+            
+            <div class="data-display">
+                <h3>Данные симуляции</h3>
+                <div class="data-row">
+                    <span>Положение ротора:</span>
+                    <span id="rotorPosition">0.00°</span>
+                </div>
+                <div class="data-row">
+                    <span>Угловая скорость:</span>
+                    <span id="angularVelocity">0.00 рад/с</span>
+                </div>
+                <div class="data-row">
+                    <span>Угловое ускорение:</span>
+                    <span id="angularAcceleration">0.00 рад/с²</span>
+                </div>
+                <div class="data-row">
+                    <span>Суммарный момент сил:</span>
+                    <span id="totalTorque">0.00 Н·м</span>
+                </div>
+                <div class="data-row">
+                    <span>Максимальная сила:</span>
+                    <span id="maxForce">0.00 Н</span>
+                </div>
+                <div class="data-row">
+                    <span>Кинетическая энергия:</span>
+                    <span id="kineticEnergy">0.00 Дж</span>
+                </div>
+                <div class="data-row">
+                    <span>Время симуляции:</span>
+                    <span id="simulationTime">0.00 с</span>
+                </div>
+                <div class="data-row">
+                    <span>Расчетные точки:</span>
+                    <span id="calculationPoints">0</span>
+                </div>
+                <div class="data-row">
+                    <span>Шаг симуляции:</span>
+                    <span id="simulationStep">0</span>
+                </div>
+                <div class="data-row">
+                    <span>Статус:</span>
+                    <span id="simulationStatus">Остановлено</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================
+        // ИНИЦИАЛИЗАЦИЯ И КОНСТАНТЫ
+        // ============================
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Размеры canvas
+        canvas.width = 800;
+        canvas.height = 500;
+        
+        // Параметры системы
+        let params = {
+            statorType: "internal",
+            rotorMagnetCount: 6,
+            statorMagnetCount: 8,
+            rotorDiameter: 150,
+            airGap: 5,
+            startAngle: 0,
+            
+            // Геометрия магнитов
+            magnetWidth: 12,
+            magnetThickness: 8,
+            magnetLength: 25,
+            magnetAngle: 0,
+            
+            // Расчет
+            calculationDetail: 8,
+            integrationPoints: 27,
+            showFieldLines: true,
+            fieldLinesCount: 20,
+            
+            // Симуляция
+            timeStep: 0.016,
+            friction: 0.01,
+            magnetStrength: 1.0,
+            
+            // Камера
+            cameraXRot: 30,
+            cameraYRot: 45,
+            cameraZoom: 300,
+            
+            // Состояние
+            isRunning: false,
+            currentStep: 0,
+            maxSteps: 100
+        };
+        
+        // Состояние системы
+        let state = {
+            rotorAngle: 0,
+            angularVelocity: 0,
+            angularAcceleration: 0,
+            time: 0,
+            simulationStep: 0,
+            
+            // 3D точки магнитов
+            magnets: {
+                rotor: [],
+                stator: []
+            },
+            
+            // История для пошагового режима
+            stepHistory: [],
+            
+            // Текущие силы
+            forces: [],
+            
+            // Магнитные линии
+            fieldLines: []
+        };
+        
+        // Константы
+        const MU0 = 4 * Math.PI * 1e-7;
+        const DEG_TO_RAD = Math.PI / 180;
+        const RAD_TO_DEG = 180 / Math.PI;
+        
+        // Цвета для 3D
+        const COLORS = {
+            northPole: '#ff4444',    // Красный - северный полюс
+            southPole: '#4444ff',    // Синий - южный полюс
+            rotor: '#888888',        // Серый - ротор
+            stator: '#aaaaaa',       // Светло-серый - статор
+            fieldLine: '#ffff00',    // Желтый - магнитная линия
+            forceArrow: '#00ff00'    // Зеленый - вектор силы
+        };
+        
+        // Элементы управления
+        const controls = {};
+        const valueDisplays = {};
+        const dataDisplays = {};
+        
+        // Управление камерой
+        let camera = {
+            xRot: params.cameraXRot * DEG_TO_RAD,
+            yRot: params.cameraYRot * DEG_TO_RAD,
+            zoom: params.cameraZoom,
+            offsetX: 0,
+            offsetY: 0,
+            isDragging: false,
+            lastX: 0,
+            lastY: 0
+        };
+        
+        // ============================
+        // МАТЕМАТИКА 3D
+        // ============================
+        
+        // Класс 3D точки
+        class Point3D {
+            constructor(x, y, z) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+            
+            // Вращение вокруг оси X
+            rotateX(angle) {
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                return new Point3D(
+                    this.x,
+                    this.y * cos - this.z * sin,
+                    this.y * sin + this.z * cos
+                );
+            }
+            
+            // Вращение вокруг оси Y
+            rotateY(angle) {
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                return new Point3D(
+                    this.x * cos + this.z * sin,
+                    this.y,
+                    -this.x * sin + this.z * cos
+                );
+            }
+            
+            // Вращение вокруг оси Z
+            rotateZ(angle) {
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                return new Point3D(
+                    this.x * cos - this.y * sin,
+                    this.x * sin + this.y * cos,
+                    this.z
+                );
+            }
+            
+            // Сложение с другой точкой
+            add(other) {
+                return new Point3D(
+                    this.x + other.x,
+                    this.y + other.y,
+                    this.z + other.z
+                );
+            }
+            
+            // Вычитание другой точки
+            subtract(other) {
+                return new Point3D(
+                    this.x - other.x,
+                    this.y - other.y,
+                    this.z - other.z
+                );
+            }
+            
+            // Умножение на скаляр
+            multiply(scalar) {
+                return new Point3D(
+                    this.x * scalar,
+                    this.y * scalar,
+                    this.z * scalar
+                );
+            }
+            
+            // Длина вектора
+            length() {
+                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            }
+            
+            // Нормализация
+            normalize() {
+                const len = this.length();
+                if (len === 0) return new Point3D(0, 0, 0);
+                return this.multiply(1 / len);
+            }
+            
+            // Векторное произведение
+            cross(other) {
+                return new Point3D(
+                    this.y * other.z - this.z * other.y,
+                    this.z * other.x - this.x * other.z,
+                    this.x * other.y - this.y * other.x
+                );
+            }
+            
+            // Скалярное произведение
+            dot(other) {
+                return this.x * other.x + this.y * other.y + this.z * other.z;
+            }
+        }
+        
+        // Проекция 3D точки на 2D с учетом камеры
+        function project3D(point) {
+            // Вращаем точку
+            let rotated = point
+                .rotateX(camera.xRot)
+                .rotateY(camera.yRot);
+            
+            // Проекция с перспективой
+            const scale = camera.zoom / (camera.zoom + rotated.z);
+            const x = rotated.x * scale + canvas.width / 2 + camera.offsetX;
+            const y = rotated.y * scale + canvas.height / 2 + camera.offsetY;
+            
+            return { x, y, depth: rotated.z };
+        }
+        
+        // ============================
+        // ГЕОМЕТРИЯ МАГНИТОВ
+        // ============================
+        
+        // Создание объемного магнита как набора точек
+        function createMagnetVolume(width, thickness, length, polarity) {
+            const points = [];
+            const halfWidth = width / 2;
+            const halfThickness = thickness / 2;
+            const halfLength = length / 2;
+            
+            // Создаем сетку точек внутри магнита
+            const detail = params.integrationPoints;
+            const pointsPerDim = Math.cbrt(detail);
+            
+            for (let i = 0; i < pointsPerDim; i++) {
+                for (let j = 0; j < pointsPerDim; j++) {
+                    for (let k = 0; k < pointsPerDim; k++) {
+                        const x = -halfWidth + (i / (pointsPerDim - 1)) * width;
+                        const y = -halfThickness + (j / (pointsPerDim - 1)) * thickness;
+                        const z = -halfLength + (k / (pointsPerDim - 1)) * length;
+                        
+                        // Магнитный момент в каждой точке направлен по Z
+                        const magneticMoment = new Point3D(0, 0, polarity);
+                        
+                        points.push({
+                            position: new Point3D(x, y, z),
+                            magneticMoment: magneticMoment,
+                            volume: (width * thickness * length) / detail
+                        });
+                    }
+                }
+            }
+            
+            return points;
+        }
+        
+        // Создание вершин для 3D отрисовки магнита
+        function createMagnetVertices(width, thickness, length) {
+            const halfWidth = width / 2;
+            const halfThickness = thickness / 2;
+            const halfLength = length / 2;
+            
+            // 8 вершин куба
+            return [
+                // Северный полюс (положительный Z)
+                new Point3D(-halfWidth, -halfThickness, halfLength), // 0
+                new Point3D(halfWidth, -halfThickness, halfLength),  // 1
+                new Point3D(halfWidth, halfThickness, halfLength),   // 2
+                new Point3D(-halfWidth, halfThickness, halfLength),  // 3
+                
+                // Южный полюс (отрицательный Z)
+                new Point3D(-halfWidth, -halfThickness, -halfLength), // 4
+                new Point3D(halfWidth, -halfThickness, -halfLength),  // 5
+                new Point3D(halfWidth, halfThickness, -halfLength),   // 6
+                new Point3D(-halfWidth, halfThickness, -halfLength)   // 7
+            ];
+        }
+        
+        // ============================
+        // ФИЗИЧЕСКИЕ РАСЧЕТЫ
+        // ============================
+        
+        // Расчет силы между двумя объемными магнитами
+        function calculateForceBetweenMagnets(magnet1, magnet2) {
+            let totalForce = new Point3D(0, 0, 0);
+            let totalTorque = 0;
+            
+            // Проходим по всем точкам обоих магнитов
+            for (let point1 of magnet1.volumePoints) {
+                for (let point2 of magnet2.volumePoints) {
+                    // Вектор от точки 1 к точке 2
+                    const r = point2.position.subtract(point1.position);
+                    const distance = r.length();
+                    
+                    if (distance < 1e-10) continue;
+                    
+                    // Нормализованный вектор
+                    const rNorm = r.normalize();
+                    
+                    // Магнитные моменты
+                    const m1 = point1.magneticMoment;
+                    const m2 = point2.magneticMoment;
+                    
+                    // Коэффициент
+                    const prefactor = (3 * MU0) / (4 * Math.PI * Math.pow(distance, 4));
+                    
+                    // Скалярные произведения
+                    const m1r = m1.dot(rNorm);
+                    const m2r = m2.dot(rNorm);
+                    
+                    // Формула для силы между диполями
+                    const force = rNorm.multiply(m1r * m2r * 5)
+                        .add(m1.multiply(-m2r))
+                        .add(m2.multiply(-m1r))
+                        .multiply(prefactor * point1.volume * point2.volume * params.magnetStrength);
+                    
+                    totalForce = totalForce.add(force);
+                    
+                    // Момент силы
+                    const torque = r.cross(force).length();
+                    totalTorque += torque;
+                }
+            }
+            
+            return {
+                force: totalForce,
+                torque: totalTorque
+            };
+        }
+        
+        // Расчет всех сил в системе
+        function calculateForces() {
+            const forces = [];
+            let totalTorque = new Point3D(0, 0, 0);
+            let maxForce = 0;
+            
+            // Считаем взаимодействие между всеми магнитами ротора и статора
+            for (let rotorMag of state.magnets.rotor) {
+                for (let statorMag of state.magnets.stator) {
+                    const result = calculateForceBetweenMagnets(rotorMag, statorMag);
+                    
+                    forces.push({
+                        from: rotorMag.center,
+                        to: statorMag.center,
+                        force: result.force,
+                        magnitude: result.force.length()
+                    });
+                    
+                    // Момент силы относительно оси вращения
+                    const r = rotorMag.center;
+                    const torque = new Point3D(
+                        r.y * result.force.z - r.z * result.force.y,
+                        r.z * result.force.x - r.x * result.force.z,
+                        r.x * result.force.y - r.y * result.force.x
+                    );
+                    
+                    // Проекция момента на ось вращения (Z)
+                    totalTorque = totalTorque.add(torque);
+                    maxForce = Math.max(maxForce, result.force.length());
+                }
+            }
+            
+            // Суммарный момент вокруг оси Z
+            const totalTorqueZ = totalTorque.z;
+            
+            return {
+                forces: forces,
+                totalTorque: totalTorqueZ,
+                maxForce: maxForce
+            };
+        }
+        
+        // Расчет магнитного поля в точке
+        function calculateMagneticFieldAt(point) {
+            let field = new Point3D(0, 0, 0);
+            
+            // Вклад от всех магнитов ротора
+            for (let magnet of state.magnets.rotor) {
+                for (let volumePoint of magnet.volumePoints) {
+                    const r = point.subtract(volumePoint.position);
+                    const distance = r.length();
+                    
+                    if (distance < 1e-10) continue;
+                    
+                    const rNorm = r.normalize();
+                    const m = volumePoint.magneticMoment;
+                    
+                    // Поле диполя
+                    const fieldContribution = rNorm.multiply(3 * m.dot(rNorm))
+                        .add(m.multiply(-1))
+                        .multiply(MU0 / (4 * Math.PI * Math.pow(distance, 3)))
+                        .multiply(volumePoint.volume);
+                    
+                    field = field.add(fieldContribution);
+                }
+            }
+            
+            // Вклад от всех магнитов статора
+            for (let magnet of state.magnets.stator) {
+                for (let volumePoint of magnet.volumePoints) {
+                    const r = point.subtract(volumePoint.position);
+                    const distance = r.length();
+                    
+                    if (distance < 1e-10) continue;
+                    
+                    const rNorm = r.normalize();
+                    const m = volumePoint.magneticMoment;
+                    
+                    const fieldContribution = rNorm.multiply(3 * m.dot(rNorm))
+                        .add(m.multiply(-1))
+                        .multiply(MU0 / (4 * Math.PI * Math.pow(distance, 3)))
+                        .multiply(volumePoint.volume);
+                    
+                    field = field.add(fieldContribution);
+                }
+            }
+            
+            return field;
+        }
+        
+        // Генерация магнитных линий
+        function generateFieldLines() {
+            const lines = [];
+            const count = params.fieldLinesCount;
+            const rotorRadius = params.rotorDiameter / 2;
+            
+            // Начинаем линии от северных полюсов магнитов ротора
+            for (let magnet of state.magnets.rotor) {
+                if (magnet.polarity > 0) { // Северный полюс
+                    // Точка на поверхности магнита
+                    const startPoint = magnet.center.add(
+                        new Point3D(0, 0, magnet.length / 2)
+                    );
+                    
+                    // Создаем несколько линий от этой точки
+                    for (let i = 0; i < 3; i++) {
+                        const angle = (i / 3) * Math.PI * 2;
+                        const offset = new Point3D(
+                            Math.cos(angle) * magnet.width / 4,
+                            Math.sin(angle) * magnet.thickness / 4,
+                            0
+                        );
+                        
+                        const line = traceFieldLine(startPoint.add(offset));
+                        lines.push(line);
+                    }
+                }
+            }
+            
+            return lines;
+        }
+        
+        // Трассировка магнитной линии
+        function traceFieldLine(startPoint) {
+            const points = [startPoint];
+            const maxSteps = 100;
+            const stepSize = 1.0; // мм
+            
+            let currentPoint = startPoint;
+            let direction = 1; // Направление трассировки
+            
+            for (let i = 0; i < maxSteps; i++) {
+                // Вычисляем магнитное поле в текущей точке
+                const field = calculateMagneticFieldAt(currentPoint);
+                
+                if (field.length() < 1e-10) break;
+                
+                // Направление движения вдоль силовой линии
+                const fieldDirection = field.normalize().multiply(direction);
+                
+                // Следующая точка
+                const nextPoint = currentPoint.add(fieldDirection.multiply(stepSize));
+                
+                // Проверяем, не вышли ли за пределы
+                const distanceFromCenter = Math.sqrt(
+                    nextPoint.x * nextPoint.x + 
+                    nextPoint.y * nextPoint.y
+                );
+                
+                if (distanceFromCenter > params.rotorDiameter * 2) break;
+                
+                points.push(nextPoint);
+                currentPoint = nextPoint;
+                
+                // Иногда меняем направление
+                if (Math.random() < 0.01) direction *= -1;
+            }
+            
+            return points;
+        }
+        
+        // ============================
+        // ОБНОВЛЕНИЕ СИСТЕМЫ
+        // ============================
+        
+        // Инициализация системы
+        function initSystem() {
+            state.magnets.rotor = [];
+            state.magnets.stator = [];
+            
+            const rotorRadius = params.rotorDiameter / 2;
+            let statorRadius;
+            
+            if (params.statorType === "internal") {
+                statorRadius = rotorRadius - params.airGap - params.magnetThickness / 2;
+            } else {
+                statorRadius = rotorRadius + params.airGap + params.magnetThickness / 2;
+            }
+            
+            // Создаем магниты ротора
+            for (let i = 0; i < params.rotorMagnetCount; i++) {
+                const angle = (2 * Math.PI * i) / params.rotorMagnetCount + state.rotorAngle;
+                const polarity = i % 2 === 0 ? 1 : -1;
+                
+                // Позиция центра магнита
+                const center = new Point3D(
+                    rotorRadius * Math.cos(angle),
+                    rotorRadius * Math.sin(angle),
+                    0
+                );
+                
+                // Вращение магнита (угол установки)
+                const magnetAngle = angle + params.magnetAngle * DEG_TO_RAD;
+                
+                // Создаем объемные точки магнита
+                const volumePoints = createMagnetVolume(
+                    params.magnetWidth,
+                    params.magnetThickness,
+                    params.magnetLength,
+                    polarity
+                );
+                
+                // Поворачиваем и перемещаем все точки
+                const transformedPoints = volumePoints.map(p => {
+                    // Поворачиваем магнит согласно углу установки
+                    let rotated = p.position.rotateZ(magnetAngle);
+                    rotated = rotated.add(center);
+                    
+                    // Магнитный момент тоже поворачиваем
+                    const rotatedMoment = p.magneticMoment.rotateZ(magnetAngle);
+                    
+                    return {
+                        position: rotated,
+                        magneticMoment: rotatedMoment,
+                        volume: p.volume
+                    };
+                });
+                
+                // Вершины для отрисовки
+                const vertices = createMagnetVertices(
+                    params.magnetWidth,
+                    params.magnetThickness,
+                    params.magnetLength
+                );
+                
+                // Поворачиваем и перемещаем вершины
+                const transformedVertices = vertices.map(v => {
+                    return v.rotateZ(magnetAngle).add(center);
+                });
+                
+                state.magnets.rotor.push({
+                    id: i,
+                    center: center,
+                    angle: angle,
+                    polarity: polarity,
+                    vertices: transformedVertices,
+                    volumePoints: transformedPoints,
+                    width: params.magnetWidth,
+                    thickness: params.magnetThickness,
+                    length: params.magnetLength
+                });
+            }
+            
+            // Создаем магниты статора
+            for (let i = 0; i < params.statorMagnetCount; i++) {
+                const angle = (2 * Math.PI * i) / params.statorMagnetCount;
+                const polarity = i % 2 === 0 ? 1 : -1;
+                
+                const center = new Point3D(
+                    statorRadius * Math.cos(angle),
+                    statorRadius * Math.sin(angle),
+                    0
+                );
+                
+                const volumePoints = createMagnetVolume(
+                    params.magnetWidth,
+                    params.magnetThickness,
+                    params.magnetLength,
+                    polarity
+                );
+                
+                const transformedPoints = volumePoints.map(p => {
+                    let rotated = p.position.rotateZ(angle);
+                    rotated = rotated.add(center);
+                    const rotatedMoment = p.magneticMoment.rotateZ(angle);
+                    
+                    return {
+                        position: rotated,
+                        magneticMoment: rotatedMoment,
+                        volume: p.volume
+                    };
+                });
+                
+                const vertices = createMagnetVertices(
+                    params.magnetWidth,
+                    params.magnetThickness,
+                    params.magnetLength
+                );
+                
+                const transformedVertices = vertices.map(v => {
+                    return v.rotateZ(angle).add(center);
+                });
+                
+                state.magnets.stator.push({
+                    id: i,
+                    center: center,
+                    angle: angle,
+                    polarity: polarity,
+                    vertices: transformedVertices,
+                    volumePoints: transformedPoints,
+                    width: params.magnetWidth,
+                    thickness: params.magnetThickness,
+                    length: params.magnetLength
+                });
+            }
+            
+            // Генерируем магнитные линии
+            if (params.showFieldLines) {
+                state.fieldLines = generateFieldLines();
+            }
+            
+            // Сбрасываем состояние
+            state.rotorAngle = params.startAngle * DEG_TO_RAD;
+            state.angularVelocity = 0;
+            state.angularAcceleration = 0;
+            state.time = 0;
+            state.simulationStep = 0;
+            state.stepHistory = [];
+            
+            // Рассчитываем силы
+            const forceResult = calculateForces();
+            state.forces = forceResult.forces;
+            
+            updateDataDisplays(forceResult);
+        }
+        
+        // Обновление системы на один шаг
+        function updateSystem() {
+            // Сохраняем состояние для истории
+            if (state.stepHistory.length >= params.maxSteps) {
+                state.stepHistory.shift();
+            }
+            
+            state.stepHistory.push({
+                rotorAngle: state.rotorAngle,
+                angularVelocity: state.angularVelocity,
+                time: state.time,
+                step: state.simulationStep
+            });
+            
+            // Обновляем текущий шаг
+            params.currentStep = state.simulationStep;
+            controls.currentStep.value = params.currentStep;
+            valueDisplays.currentStep.textContent = params.currentStep;
+            
+            // Рассчитываем силы
+            const forceResult = calculateForces();
+            state.forces = forceResult.forces;
+            
+            // Момент инерции ротора
+            const rotorMass = calculateRotorMass();
+            const rotorRadius = params.rotorDiameter / 2000; // в метрах
+            const momentOfInertia = 0.5 * rotorMass * rotorRadius * rotorRadius;
+            
+            // Трение
+            const frictionTorque = -params.friction * state.angularVelocity;
+            
+            // Угловое ускорение
+            state.angularAcceleration = (forceResult.totalTorque + frictionTorque) / momentOfInertia;
+            
+            // Обновляем скорость и угол
+            state.angularVelocity += state.angularAcceleration * params.timeStep;
+            state.rotorAngle += state.angularVelocity * params.timeStep;
+            
+            // Нормализуем угол
+            state.rotorAngle %= (2 * Math.PI);
+            
+            // Обновляем время
+            state.time += params.timeStep;
+            state.simulationStep++;
+            
+            // Обновляем позиции магнитов ротора
+            const rotorRadiusMM = params.rotorDiameter / 2;
+            
+            for (let magnet of state.magnets.rotor) {
+                const angle = magnet.angle + state.rotorAngle;
+                
+                magnet.center = new Point3D(
+                    rotorRadiusMM * Math.cos(angle),
+                    rotorRadiusMM * Math.sin(angle),
+                    0
+                );
+                
+                // Обновляем все точки объема
+                for (let i = 0; i < magnet.volumePoints.length; i++) {
+                    const originalPoint = magnet.volumePoints[i];
+                    
+                    // Вращаем точку вокруг центра
+                    const relativePos = originalPoint.position.subtract(
+                        new Point3D(
+                            rotorRadiusMM * Math.cos(magnet.angle),
+                            rotorRadiusMM * Math.sin(magnet.angle),
+                            0
+                        )
+                    );
+                    
+                    const rotatedPos = relativePos.rotateZ(state.rotorAngle);
+                    
+                    magnet.volumePoints[i].position = rotatedPos.add(magnet.center);
+                    magnet.volumePoints[i].magneticMoment = originalPoint.magneticMoment.rotateZ(state.rotorAngle);
+                }
+                
+                // Обновляем вершины для отрисовки
+                const originalAngle = magnet.angle - state.rotorAngle;
+                const rotationCorrection = state.rotorAngle;
+                
+                for (let i = 0; i < magnet.vertices.length; i++) {
+                    // Относительное положение вершины
+                    const originalVertex = magnet.vertices[i];
+                    const relativeToCenter = originalVertex.subtract(
+                        new Point3D(
+                            rotorRadiusMM * Math.cos(originalAngle),
+                            rotorRadiusMM * Math.sin(originalAngle),
+                            0
+                        )
+                    );
+                    
+                    const rotatedVertex = relativeToCenter.rotateZ(rotationCorrection);
+                    magnet.vertices[i] = rotatedVertex.add(magnet.center);
+                }
+            }
+            
+            // Обновляем магнитные линии
+            if (params.showFieldLines) {
+                state.fieldLines = generateFieldLines();
+            }
+            
+            updateDataDisplays(forceResult);
+        }
+        
+        // Расчет массы ротора
+        function calculateRotorMass() {
+            // Плотность магнитов (примерно)
+            const magnetDensity = 7500; // кг/м³
+            const magnetVolume = params.magnetWidth * params.magnetThickness * 
+                               params.magnetLength * 1e-9; // м³
+            
+            // Масса всех магнитов
+            const magnetsMass = magnetVolume * magnetDensity * params.rotorMagnetCount;
+            
+            // Масса диска ротора (алюминий)
+            const rotorRadius = params.rotorDiameter / 2000; // м
+            const diskThickness = params.magnetThickness / 1000; // м
+            const diskVolume = Math.PI * rotorRadius * rotorRadius * diskThickness;
+            const diskMass = diskVolume * 2700; // Плотность алюминия
+            
+            return magnetsMass + diskMass;
+        }
+        
+        // ============================
+        // 3D ВИЗУАЛИЗАЦИЯ
+        // ============================
+        
+        // Отрисовка 3D магнита
+        function drawMagnet3D(vertices, polarity) {
+            // Выбираем цвет в зависимости от полюса
+            const color = polarity > 0 ? COLORS.northPole : COLORS.southPole;
+            
+            // Проектируем вершины
+            const projVertices = vertices.map(v => project3D(v));
+            
+            // Находим среднюю глубину для сортировки
+            const avgDepth = projVertices.reduce((sum, v) => sum + v.depth, 0) / projVertices.length;
+            
+            // Грани куба (индексы вершин)
+            const faces = [
+                // Северный полюс
+                [0, 1, 2, 3],
+                // Южный полюс
+                [4, 5, 6, 7],
+                // Боковые грани
+                [0, 1, 5, 4],
+                [1, 2, 6, 5],
+                [2, 3, 7, 6],
+                [3, 0, 4, 7]
+            ];
+            
+            // Рисуем грани
+            for (let face of faces) {
+                ctx.beginPath();
+                ctx.moveTo(projVertices[face[0]].x, projVertices[face[0]].y);
+                
+                for (let i = 1; i < face.length; i++) {
+                    ctx.lineTo(projVertices[face[i]].x, projVertices[face[i]].y);
+                }
+                
+                ctx.closePath();
+                
+                // Заливка с учетом глубины
+                const depthFactor = 0.5 + (avgDepth + 500) / 1000;
+                const fillColor = adjustColorBrightness(color, depthFactor);
+                
+                ctx.fillStyle = fillColor + "80"; // Полупрозрачная
+                ctx.fill();
+                
+                // Контур
+                ctx.strokeStyle = adjustColorBrightness(color, 0.7);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            
+            // Подписываем полюса
+            const northPoleCenter = new Point3D(
+                (vertices[0].x + vertices[1].x + vertices[2].x + vertices[3].x) / 4,
+                (vertices[0].y + vertices[1].y + vertices[2].y + vertices[3].y) / 4,
+                (vertices[0].z + vertices[1].z + vertices[2].z + vertices[3].z) / 4
+            );
+            
+            const southPoleCenter = new Point3D(
+                (vertices[4].x + vertices[5].x + vertices[6].x + vertices[7].x) / 4,
+                (vertices[4].y + vertices[5].y + vertices[6].y + vertices[7].y) / 4,
+                (vertices[4].z + vertices[5].z + vertices[6].z + vertices[7].z) / 4
+            );
+            
+            const northProj = project3D(northPoleCenter);
+            const southProj = project3D(southPoleCenter);
+            
+            // Подписи полюсов
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (polarity > 0) {
+                ctx.fillText('N', northProj.x, northProj.y);
+                ctx.fillText('S', southProj.x, southProj.y);
+            } else {
+                ctx.fillText('S', northProj.x, northProj.y);
+                ctx.fillText('N', southProj.x, southProj.y);
+            }
+        }
+        
+        // Отрисовка диска ротора
+        function drawRotorDisk() {
+            const rotorRadius = params.rotorDiameter / 2;
+            
+            // Создаем точки для диска
+            const segments = 32;
+            const points = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                points.push(new Point3D(
+                    rotorRadius * Math.cos(angle),
+                    rotorRadius * Math.sin(angle),
+                    -params.magnetThickness / 2
+                ));
+            }
+            
+            // Проектируем точки
+            const projPoints = points.map(p => project3D(p));
+            
+            // Рисуем диск
+            ctx.beginPath();
+            ctx.moveTo(projPoints[0].x, projPoints[0].y);
+            
+            for (let i = 1; i < projPoints.length; i++) {
+                ctx.lineTo(projPoints[i].x, projPoints[i].y);
+            }
+            
+            ctx.closePath();
+            
+            // Заливка диска
+            const gradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 0,
+                canvas.width / 2, canvas.height / 2, rotorRadius * 2
+            );
+            gradient.addColorStop(0, COLORS.rotor + 'CC');
+            gradient.addColorStop(1, COLORS.rotor + '40');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Контур
+            ctx.strokeStyle = adjustColorBrightness(COLORS.rotor, 1.2);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Отрисовка статора
+        function drawStator() {
+            const rotorRadius = params.rotorDiameter / 2;
+            const statorRadius = params.statorType === "internal" 
+                ? rotorRadius - params.airGap - params.magnetThickness
+                : rotorRadius + params.airGap + params.magnetThickness;
+            
+            // Рисуем кольцо статора
+            const segments = 64;
+            const points = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                points.push(new Point3D(
+                    statorRadius * Math.cos(angle),
+                    statorRadius * Math.sin(angle),
+                    0
+                ));
+            }
+            
+            const projPoints = points.map(p => project3D(p));
+            
+            ctx.beginPath();
+            ctx.moveTo(projPoints[0].x, projPoints[0].y);
+            
+            for (let i = 1; i < projPoints.length; i++) {
+                ctx.lineTo(projPoints[i].x, projPoints[i].y);
+            }
+            
+            ctx.closePath();
+            
+            ctx.strokeStyle = COLORS.stator;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+        
+        // Отрисовка магнитных линий
+        function drawFieldLines() {
+            if (!params.showFieldLines || state.fieldLines.length === 0) return;
+            
+            ctx.strokeStyle = COLORS.fieldLine + 'AA';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            
+            for (let line of state.fieldLines) {
+                if (line.length < 2) continue;
+                
+                ctx.beginPath();
+                const firstPoint = project3D(line[0]);
+                ctx.moveTo(firstPoint.x, firstPoint.y);
+                
+                for (let i = 1; i < line.length; i++) {
+                    const projPoint = project3D(line[i]);
+                    ctx.lineTo(projPoint.x, projPoint.y);
+                }
+                
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+        }
+        
+        // Отрисовка векторов сил
+        function drawForceVectors() {
+            ctx.strokeStyle = COLORS.forceArrow;
+            ctx.fillStyle = COLORS.forceArrow;
+            ctx.lineWidth = 2;
+            
+            for (let force of state.forces) {
+                if (force.magnitude < 0.01) continue;
+                
+                const fromProj = project3D(force.from);
+                const toProj = project3D(force.to);
+                
+                // Вектор силы
+                const forceVec = force.to.subtract(force.from);
+                const normalizedForce = forceVec.normalize().multiply(20); // Масштаб
+                
+                const arrowEnd = force.from.add(normalizedForce);
+                const arrowEndProj = project3D(arrowEnd);
+                
+                // Линия силы
+                ctx.beginPath();
+                ctx.moveTo(fromProj.x, fromProj.y);
+                ctx.lineTo(arrowEndProj.x, arrowEndProj.y);
+                ctx.stroke();
+                
+                // Стрелка
+                const angle = Math.atan2(
+                    arrowEndProj.y - fromProj.y,
+                    arrowEndProj.x - fromProj.x
+                );
+                
+                const arrowSize = 6;
+                
+                ctx.beginPath();
+                ctx.moveTo(arrowEndProj.x, arrowEndProj.y);
+                ctx.lineTo(
+                    arrowEndProj.x - arrowSize * Math.cos(angle - Math.PI/6),
+                    arrowEndProj.y - arrowSize * Math.sin(angle - Math.PI/6)
+                );
+                ctx.lineTo(
+                    arrowEndProj.x - arrowSize * Math.cos(angle + Math.PI/6),
+                    arrowEndProj.y - arrowSize * Math.sin(angle + Math.PI/6)
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        // Отрисовка координатных осей
+        function drawAxes() {
+            const origin = new Point3D(0, 0, 0);
+            const axisLength = 50;
+            
+            // Оси
+            const axes = [
+                { point: new Point3D(axisLength, 0, 0), color: '#ff0000', label: 'X' },
+                { point: new Point3D(0, axisLength, 0), color: '#00ff00', label: 'Y' },
+                { point: new Point3D(0, 0, axisLength), color: '#0000ff', label: 'Z' }
+            ];
+            
+            const originProj = project3D(origin);
+            
+            for (let axis of axes) {
+                const endProj = project3D(axis.point);
+                
+                // Ось
+                ctx.beginPath();
+                ctx.moveTo(originProj.x, originProj.y);
+                ctx.lineTo(endProj.x, endProj.y);
+                ctx.strokeStyle = axis.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Подпись
+                ctx.fillStyle = axis.color;
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(axis.label, endProj.x + 5, endProj.y + 5);
+            }
+        }
+        
+        // Основная функция отрисовки
+        function render() {
+            // Очищаем canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем статор
+            drawStator();
+            
+            // Рисуем диск ротора
+            drawRotorDisk();
+            
+            // Рисуем магниты статора
+            for (let magnet of state.magnets.stator) {
+                drawMagnet3D(magnet.vertices, magnet.polarity);
+            }
+            
+            // Рисуем магниты ротора
+            for (let magnet of state.magnets.rotor) {
+                drawMagnet3D(magnet.vertices, magnet.polarity);
+            }
+            
+            // Рисуем магнитные линии
+            drawFieldLines();
+            
+            // Рисуем векторы сил
+            drawForceVectors();
+            
+            // Рисуем координатные оси
+            drawAxes();
+            
+            // Информация о камере
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(`Камера: X=${Math.round(camera.xRot * RAD_TO_DEG)}° Y=${Math.round(camera.yRot * RAD_TO_DEG)}°`, 10, 10);
+            ctx.fillText(`Расчетных точек: ${state.magnets.rotor.length * params.integrationPoints}`, 10, 30);
+        }
+        
+        // ============================
+        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ============================
+        
+        // Корректировка яркости цвета
+        function adjustColorBrightness(color, factor) {
+            // Простая коррекция для hex-цветов
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            const newR = Math.min(255, Math.max(0, Math.round(r * factor)));
+            const newG = Math.min(255, Math.max(0, Math.round(g * factor)));
+            const newB = Math.min(255, Math.max(0, Math.round(b * factor)));
+            
+            return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        }
+        
+        // Обновление данных на дисплее
+        function updateDataDisplays(forceResult) {
+            const rpm = Math.abs(state.angularVelocity) * 60 / (2 * Math.PI);
+            
+            dataDisplays.rotorPosition.textContent = `${(state.rotorAngle * RAD_TO_DEG).toFixed(2)}°`;
+            dataDisplays.angularVelocity.textContent = `${state.angularVelocity.toFixed(3)} рад/с`;
+            dataDisplays.angularAcceleration.textContent = `${state.angularAcceleration.toFixed(3)} рад/с²`;
+            dataDisplays.totalTorque.textContent = `${forceResult.totalTorque.toFixed(6)} Н·м`;
+            dataDisplays.maxForce.textContent = `${forceResult.maxForce.toFixed(6)} Н`;
+            
+            const rotorMass = calculateRotorMass();
+            const rotorRadius = params.rotorDiameter / 2000;
+            const momentOfInertia = 0.5 * rotorMass * rotorRadius * rotorRadius;
+            const kineticEnergy = 0.5 * momentOfInertia * state.angularVelocity * state.angularVelocity;
+            
+            dataDisplays.kineticEnergy.textContent = `${kineticEnergy.toFixed(6)} Дж`;
+            dataDisplays.simulationTime.textContent = `${state.time.toFixed(3)} с`;
+            dataDisplays.calculationPoints.textContent = state.magnets.rotor.length * params.integrationPoints;
+            dataDisplays.simulationStep.textContent = state.simulationStep;
+            dataDisplays.simulationStatus.textContent = params.isRunning ? 'Работает' : 'Остановлено';
+        }
+        
+        // ============================
+        // УПРАВЛЕНИЕ И ИНТЕРФЕЙС
+        // ============================
+        
+        // Инициализация элементов управления
+        function initControls() {
+            // Собираем элементы
+            const controlIds = [
+                'statorType', 'rotorMagnetCount', 'statorMagnetCount', 'rotorDiameter', 
+                'airGap', 'startAngle', 'magnetWidth', 'magnetThickness', 'magnetLength',
+                'magnetAngle', 'calculationDetail', 'integrationPoints', 'showFieldLines',
+                'fieldLinesCount', 'timeStep', 'friction', 'magnetStrength', 'cameraXRot',
+                'cameraYRot', 'cameraZoom', 'currentStep'
+            ];
+            
+            controlIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    controls[id] = element;
+                    
+                    // Для элементов с value-display
+                    const valueDisplay = document.getElementById(id + 'Value');
+                    if (valueDisplay) {
+                        valueDisplays[id] = valueDisplay;
+                        valueDisplay.textContent = element.value;
+                    }
+                }
+            });
+            
+            // Собираем элементы отображения данных
+            const displayIds = [
+                'rotorPosition', 'angularVelocity', 'angularAcceleration', 'totalTorque',
+                'maxForce', 'kineticEnergy', 'simulationTime', 'calculationPoints',
+                'simulationStep', 'simulationStatus'
+            ];
+            
+            displayIds.forEach(id => {
+                dataDisplays[id] = document.getElementById(id);
+            });
+            
+            // Кнопки
+            const buttonIds = [
+                'cameraTop', 'cameraFront', 'cameraSide', 'cameraIsometric',
+                'stepBackward', 'playPause', 'stepForward', 'resetStep',
+                'recordSteps', 'resetBtn', 'exportBtn'
+            ];
+            
+            buttonIds.forEach(id => {
+                const button = document.getElementById(id);
+                if (button) {
+                    controls[id] = button;
+                }
+            });
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Основные параметры
+            controls.rotorMagnetCount.addEventListener('input', function() {
+                params.rotorMagnetCount = parseInt(this.value);
+                valueDisplays.rotorMagnetCount.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.statorMagnetCount.addEventListener('input', function() {
+                params.statorMagnetCount = parseInt(this.value);
+                valueDisplays.statorMagnetCount.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.rotorDiameter.addEventListener('input', function() {
+                params.rotorDiameter = parseInt(this.value);
+                valueDisplays.rotorDiameter.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.airGap.addEventListener('input', function() {
+                params.airGap = parseFloat(this.value);
+                valueDisplays.airGap.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.startAngle.addEventListener('input', function() {
+                params.startAngle = parseInt(this.value);
+                valueDisplays.startAngle.textContent = this.value;
+                state.rotorAngle = params.startAngle * DEG_TO_RAD;
+                initSystem();
+            });
+            
+            controls.statorType.addEventListener('change', function() {
+                params.statorType = this.value;
+                initSystem();
+            });
+            
+            // Геометрия магнитов
+            controls.magnetWidth.addEventListener('change', function() {
+                params.magnetWidth = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetThickness.addEventListener('change', function() {
+                params.magnetThickness = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetLength.addEventListener('change', function() {
+                params.magnetLength = parseInt(this.value);
+                initSystem();
+            });
+            
+            controls.magnetAngle.addEventListener('change', function() {
+                params.magnetAngle = parseInt(this.value);
+                initSystem();
+            });
+            
+            // Расчет
+            controls.calculationDetail.addEventListener('input', function() {
+                params.calculationDetail = parseInt(this.value);
+                valueDisplays.calculationDetail.textContent = this.value;
+            });
+            
+            controls.integrationPoints.addEventListener('input', function() {
+                params.integrationPoints = parseInt(this.value);
+                valueDisplays.integrationPoints.textContent = this.value;
+                initSystem();
+            });
+            
+            controls.showFieldLines.addEventListener('change', function() {
+                params.showFieldLines = this.checked;
+                if (params.showFieldLines) {
+                    state.fieldLines = generateFieldLines();
+                }
+            });
+            
+            controls.fieldLinesCount.addEventListener('input', function() {
+                params.fieldLinesCount = parseInt(this.value);
+                valueDisplays.fieldLinesCount.textContent = this.value;
+                if (params.showFieldLines) {
+                    state.fieldLines = generateFieldLines();
+                }
+            });
+            
+            // Симуляция
+            controls.timeStep.addEventListener('input', function() {
+                params.timeStep = parseInt(this.value) / 1000;
+                valueDisplays.timeStep.textContent = this.value;
+            });
+            
+            controls.friction.addEventListener('input', function() {
+                params.friction = parseFloat(this.value);
+                valueDisplays.friction.textContent = this.value;
+            });
+            
+            controls.magnetStrength.addEventListener('input', function() {
+                params.magnetStrength = parseFloat(this.value);
+                valueDisplays.magnetStrength.textContent = this.value;
+            });
+            
+            // Камера
+            controls.cameraXRot.addEventListener('input', function() {
+                camera.xRot = parseInt(this.value) * DEG_TO_RAD;
+                valueDisplays.cameraXRot.textContent = this.value;
+            });
+            
+            controls.cameraYRot.addEventListener('input', function() {
+                camera.yRot = parseInt(this.value) * DEG_TO_RAD;
+                valueDisplays.cameraYRot.textContent = this.value;
+            });
+            
+            controls.cameraZoom.addEventListener('input', function() {
+                camera.zoom = parseInt(this.value);
+                valueDisplays.cameraZoom.textContent = this.value;
+            });
+            
+            // Управление камерой кнопками
+            controls.cameraTop.addEventListener('click', () => {
+                camera.xRot = -90 * DEG_TO_RAD;
+                camera.yRot = 0;
+                controls.cameraXRot.value = -90;
+                controls.cameraYRot.value = 0;
+                valueDisplays.cameraXRot.textContent = '-90';
+                valueDisplays.cameraYRot.textContent = '0';
+            });
+            
+            controls.cameraFront.addEventListener('click', () => {
+                camera.xRot = 0;
+                camera.yRot = 0;
+                controls.cameraXRot.value = 0;
+                controls.cameraYRot.value = 0;
+                valueDisplays.cameraXRot.textContent = '0';
+                valueDisplays.cameraYRot.textContent = '0';
+            });
+            
+            controls.cameraSide.addEventListener('click', () => {
+                camera.xRot = 0;
+                camera.yRot = 90 * DEG_TO_RAD;
+                controls.cameraXRot.value = 0;
+                controls.cameraYRot.value = 90;
+                valueDisplays.cameraXRot.textContent = '0';
+                valueDisplays.cameraYRot.textContent = '90';
+            });
+            
+            controls.cameraIsometric.addEventListener('click', () => {
+                camera.xRot = 30 * DEG_TO_RAD;
+                camera.yRot = 45 * DEG_TO_RAD;
+                controls.cameraXRot.value = 30;
+                controls.cameraYRot.value = 45;
+                valueDisplays.cameraXRot.textContent = '30';
+                valueDisplays.cameraYRot.textContent = '45';
+            });
+            
+            // Пошаговый режим
+            controls.currentStep.addEventListener('input', function() {
+                const step = parseInt(this.value);
+                params.currentStep = step;
+                valueDisplays.currentStep.textContent = step;
+                
+                if (step < state.stepHistory.length) {
+                    const historyState = state.stepHistory[step];
+                    if (historyState) {
+                        state.rotorAngle = historyState.rotorAngle;
+                        state.angularVelocity = historyState.angularVelocity;
+                        state.time = historyState.time;
+                        state.simulationStep = historyState.step;
+                        initSystem();
+                    }
+                }
+            });
+            
+            controls.stepBackward.addEventListener('click', () => {
+                if (params.currentStep > 0) {
+                    params.currentStep--;
+                    controls.currentStep.value = params.currentStep;
+                    valueDisplays.currentStep.textContent = params.currentStep;
+                    
+                    if (params.currentStep < state.stepHistory.length) {
+                        const historyState = state.stepHistory[params.currentStep];
+                        if (historyState) {
+                            state.rotorAngle = historyState.rotorAngle;
+                            state.angularVelocity = historyState.angularVelocity;
+                            state.time = historyState.time;
+                            state.simulationStep = historyState.step;
+                            initSystem();
+                        }
+                    }
+                }
+            });
+            
+            controls.stepForward.addEventListener('click', () => {
+                updateSystem();
+            });
+            
+            controls.playPause.addEventListener('click', () => {
+                params.isRunning = !params.isRunning;
+                controls.playPause.textContent = params.isRunning ? '⏸ Пауза' : '▶ Воспроизвести';
+                dataDisplays.simulationStatus.textContent = params.isRunning ? 'Работает' : 'Остановлено';
+            });
+            
+            controls.resetStep.addEventListener('click', () => {
+                params.currentStep = 0;
+                controls.currentStep.value = 0;
+                valueDisplays.currentStep.textContent = '0';
+                state.stepHistory = [];
+                state.simulationStep = 0;
+                initSystem();
+            });
+            
+            controls.recordSteps.addEventListener('click', async () => {
+                params.isRunning = false;
+                controls.playPause.textContent = '▶ Воспроизвести';
+                
+                const originalStep = state.simulationStep;
+                
+                for (let i = 0; i < 100; i++) {
+                    updateSystem();
+                    render();
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                
+                params.maxSteps = state.stepHistory.length;
+                controls.currentStep.max = params.maxSteps;
+            });
+            
+            // Кнопки управления
+            controls.resetBtn.addEventListener('click', () => {
+                state.rotorAngle = params.startAngle * DEG_TO_RAD;
+                state.angularVelocity = 0;
+                state.angularAcceleration = 0;
+                state.time = 0;
+                state.simulationStep = 0;
+                state.stepHistory = [];
+                params.currentStep = 0;
+                controls.currentStep.value = 0;
+                valueDisplays.currentStep.textContent = '0';
+                initSystem();
+            });
+            
+            controls.exportBtn.addEventListener('click', () => {
+                exportData();
+            });
+        }
+        
+        // Настройка вкладок
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+        }
+        
+        // Настройка перетаскивания камеры
+        function setupCameraDrag() {
+            canvas.addEventListener('mousedown', (e) => {
+                camera.isDragging = true;
+                camera.lastX = e.clientX;
+                camera.lastY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!camera.isDragging) return;
+                
+                const deltaX = e.clientX - camera.lastX;
+                const deltaY = e.clientY - camera.lastY;
+                
+                camera.yRot += deltaX * 0.01;
+                camera.xRot += deltaY * 0.01;
+                
+                // Ограничиваем угол X
+                camera.xRot = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.xRot));
+                
+                camera.lastX = e.clientX;
+                camera.lastY = e.clientY;
+                
+                // Обновляем слайдеры
+                controls.cameraXRot.value = Math.round(camera.xRot * RAD_TO_DEG);
+                controls.cameraYRot.value = Math.round(camera.yRot * RAD_TO_DEG);
+                valueDisplays.cameraXRot.textContent = controls.cameraXRot.value;
+                valueDisplays.cameraYRot.textContent = controls.cameraYRot.value;
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                camera.isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+            
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camera.zoom += e.deltaY * -0.1;
+                camera.zoom = Math.max(100, Math.min(1000, camera.zoom));
+                
+                controls.cameraZoom.value = camera.zoom;
+                valueDisplays.cameraZoom.textContent = Math.round(camera.zoom);
+            });
+        }
+        
+        // Экспорт данных
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                parameters: params,
+                currentState: {
+                    rotorAngle: state.rotorAngle,
+                    angularVelocity: state.angularVelocity,
+                    angularAcceleration: state.angularAcceleration,
+                    time: state.time,
+                    simulationStep: state.simulationStep
+                },
+                stepHistory: state.stepHistory
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `3d_magnetic_sim_${new Date().getTime()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // ============================
+        // ГЛАВНЫЙ ЦИКЛ
+        // ============================
+        
+        function animate() {
+            if (params.isRunning) {
+                updateSystem();
+            }
+            
+            render();
+            requestAnimationFrame(animate);
+        }
+        
+        // Инициализация
+        function init() {
+            initControls();
+            setupTabs();
+            setupEventListeners();
+            setupCameraDrag();
+            initSystem();
+            animate();
+        }
+        
+        // Запуск
+        init();
+    </script>
+</body>
+</html>
