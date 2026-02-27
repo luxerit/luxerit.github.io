@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOVUS AI | Презентация</title>
+  <title>Nexus AI | заглушка</title>
   <style>
-    /* СБРОС И БАЗОВЫЕ СТИЛИ */
+    /* СБРОС И ОСНОВНЫЕ СТИЛИ */
     * {
       margin: 0;
       padding: 0;
@@ -14,462 +13,443 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      background: linear-gradient(145deg, #f6f8fc 0%, #edf0f7 100%);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8faff; /* очень светлый фон, как на референсе */
+      color: #121723;
+      line-height: 1.5;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
-      line-height: 1.5;
-      color: #1a1e2b;
+      padding: 2rem;
     }
 
-    /* ПРЕМИАЛЬНЫЙ КОНТЕЙНЕР С ЭФФЕКТОМ СТЕКЛА */
-    .premium-container {
-      max-width: 1200px;
+    /* основной контейнер — широкий, без лишнего стекла */
+    .container {
+      max-width: 1300px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.38);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border-radius: 3.5rem;
-      box-shadow: 
-        0 25px 50px -10px rgba(0, 0, 0, 0.15),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-      padding: 2.8rem 2.5rem;
-      transition: all 0.3s ease;
+      margin: 0 auto;
     }
 
-    /* СЕТКА ДЛЯ КОНТЕНТА */
-    .content-grid {
+    /* НАВИГАЦИЯ (ЗАГЛУШКА) — простая, в стиле референса */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0 2.5rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #1e2c3a, #14212e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span {
+      font-weight: 300;
+      color: #4f658d;
+      background: none;
+      -webkit-text-fill-color: #4f658d;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      font-weight: 450;
+      color: #2d3a4f;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: inherit;
+      font-size: 1rem;
+      border-bottom: 2px solid transparent;
+      transition: 0.2s;
+    }
+    .nav-links a:hover {
+      border-bottom-color: #2d3a4f;
+    }
+
+    /* ОСНОВНОЙ ГРИД — ДВЕ КОЛОНКИ, КАК НА КАРТИНКЕ */
+    .hero-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 3rem;
+      gap: 4rem 3rem;
       align-items: center;
     }
 
     /* ЛЕВАЯ ЧАСТЬ — ТЕКСТ */
-    .text-side {
+    .hero-text {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.8rem;
     }
 
-    /* ПРЕМИАЛЬНЫЙ ЛОГОТИП */
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
+    /* теглайн сверху */
+    .pre-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #556c88;
       font-weight: 500;
-      letter-spacing: -0.02em;
     }
 
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, #1e2b3a, #2c3e50);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.6rem;
-      font-weight: 400;
-      box-shadow: 0 8px 20px -6px rgba(0,20,40,0.3);
-    }
-
-    .logo-text {
-      font-size: 1.8rem;
-      font-weight: 500;
-      background: linear-gradient(145deg, #1a2634, #2e3b4b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .logo-accent {
-      font-weight: 300;
-      background: linear-gradient(145deg, #5f6b7a, #8596aa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* ОСНОВНОЙ ЗАГОЛОВОК */
     h1 {
-      font-size: clamp(2.4rem, 7vw, 3.8rem);
-      font-weight: 450;
-      line-height: 1.15;
+      font-size: clamp(2.8rem, 6vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.1;
       letter-spacing: -0.03em;
-      color: #0d121c;
-    }
-    .gradient-text {
-      background: linear-gradient(145deg, #141b26, #2f4b6e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-weight: 520;
+      color: #0c1421;
+      max-width: 800px;
     }
 
-    /* ПОДЗАГОЛОВОК / ОПИСАНИЕ */
-    .description {
+    .accent-underline {
+      background: linear-gradient(120deg, #dfe9f5 0%, #dfe9f5 40%, #b5c8e0 90%);
+      background-repeat: no-repeat;
+      background-size: 100% 0.3em;
+      background-position: 0 85%;
+      display: inline;
+      padding: 0 0.2rem;
+    }
+
+    .hero-description {
       font-size: 1.2rem;
-      color: #2e3a48;
+      color: #2f3d55;
       max-width: 90%;
-      font-weight: 350;
-      border-left: 3px solid rgba(45, 75, 105, 0.25);
-      padding-left: 1.5rem;
-      margin-top: 0.5rem;
+      font-weight: 400;
+      margin: 0.5rem 0 1rem;
     }
 
-    /* ПРЕИМУЩЕСТВА (ДЛЯ LUXURY ВИБА) */
-    .features-mini {
+    /* КНОПКИ (CTA) — ДВЕ, как на референсе */
+    .button-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.2rem 1.8rem;
-      margin: 0.5rem 0 0.8rem;
-    }
-    .feature-tag {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 1rem;
-      font-weight: 400;
-      color: #1e2b3c;
-      background: rgba(255,255,255,0.5);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      padding: 0.4rem 1.2rem 0.4rem 0.8rem;
-      border-radius: 60px;
-      border: 1px solid rgba(255,255,255,0.7);
-      box-shadow: 0 4px 10px -6px rgba(0,0,0,0.2);
-    }
-    .feature-tag span {
-      background: #2f4057;
-      color: white;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
+      gap: 1.2rem;
+      margin: 0.8rem 0 1.5rem;
     }
 
-    /* КНОПКА (CTA) — ПРЕМИАЛЬНЫЙ МИНИМАЛИЗМ */
-    .premium-button {
+    .btn {
+      padding: 0.9rem 2.4rem;
+      border-radius: 40px;
+      font-weight: 550;
+      font-size: 1.05rem;
+      border: none;
+      cursor: default; /* заглушка */
+      transition: all 0.15s ease;
       background: transparent;
-      border: 1.2px solid rgba(25, 35, 55, 0.3);
-      color: #0d1b2a;
-      padding: 1rem 3rem 1rem 2rem;
-      font-size: 1.2rem;
-      font-weight: 450;
-      letter-spacing: 0.02em;
-      border-radius: 50px;
-      cursor: default;  /* Заглушка, не кликабельно */
-      width: fit-content;
-      backdrop-filter: blur(10px);
-      transition: 0.2s;
-      box-shadow: 0 8px 20px -14px #0f1a24;
-      position: relative;
-      background: rgba(255,255,255,0.25);
-    }
-    .premium-button::after {
-      content: "→";
-      position: absolute;
-      right: 1.4rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1.6rem;
-      opacity: 0.5;
-      transition: 0.2s;
-    }
-    .premium-button:hover {
-      border-color: rgba(25, 35, 55, 0.7);
-      background: rgba(255,255,255,0.4);
-      box-shadow: 0 10px 25px -12px #0f1a24;
-    }
-    .premium-button:hover::after {
-      opacity: 1;
-      right: 1.2rem;
+      border: 1.5px solid #a6bbd9;
+      color: #1c2b3f;
     }
 
-    /* ПРАВАЯ ЧАСТЬ — ВИЗУАЛЬНАЯ АЙ-СФЕРА */
-    .visual-side {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
+    .btn-primary {
+      background: #1a2637;
+      border: 1.5px solid #1a2637;
+      color: white;
     }
 
-    .ai-sphere {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 1/1;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(225,235,250,0.4));
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      box-shadow: 
-        0 20px 40px -15px rgba(30,60,90,0.3),
-        inset 0 -8px 15px rgba(0,0,0,0.02),
-        inset 0 8px 20px rgba(255,255,255,0.7);
+    .btn-primary:hover {
+      background: #2b3b52;
+      border-color: #2b3b52;
     }
 
-    /* АНИМИРОВАННЫЕ ОРБИТЫ */
-    .orbit {
-      position: absolute;
-      width: 90%;
-      height: 90%;
-      border-radius: 50%;
-      border: 1px dashed rgba(80, 110, 150, 0.25);
-      animation: rotateSlow 28s infinite linear;
-    }
-    .orbit:nth-child(2) {
-      width: 70%;
-      height: 70%;
-      border: 1px solid rgba(120, 150, 200, 0.2);
-      animation-duration: 19s;
-      animation-direction: reverse;
-    }
-    .orbit:nth-child(3) {
-      width: 50%;
-      height: 50%;
-      border: 1px solid rgba(180, 200, 240, 0.3);
-      animation-duration: 14s;
-    }
-    .core {
-      width: 30%;
-      height: 30%;
-      background: radial-gradient(circle at 35% 35%, #afc6e4, #4a6280);
-      border-radius: 50%;
-      z-index: 3;
-      box-shadow: 0 0 40px #6b8bb0;
-      position: relative;
-    }
-    .pulse {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(150,190,240,0.25);
-      border-radius: 50%;
-      animation: pulseGlow 3s infinite ease-out;
-    }
-    .tiny-dot {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: #38506b;
-      border-radius: 50%;
-      top: 20%;
-      left: 70%;
-      opacity: 0.5;
-      box-shadow: 0 0 15px #5779a3;
-    }
-    .tiny-dot2 {
-      top: 70%;
-      left: 20%;
-      width: 12px;
-      height: 12px;
-      background: #617b9e;
-      opacity: 0.4;
+    .btn-outline:hover {
+      background: rgba(0,0,0,0.02);
+      border-color: #7e95b5;
     }
 
-    @keyframes rotateSlow {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes pulseGlow {
-      0% { transform: scale(1); opacity: 0.4; }
-      50% { transform: scale(1.35); opacity: 0.1; }
-      100% { transform: scale(1); opacity: 0.4; }
+    /* МИНИ-ГРИД С ПРЕИМУЩЕСТВАМИ (КОПИРУЕМ СТИЛЬ ИЗОБРАЖЕНИЯ) */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem 2rem;
+      margin-top: 2rem;
     }
 
-    /* ФУТЕР ЗАГЛУШКИ */
-    .footer-note {
-      margin-top: 3rem;
-      text-align: center;
+    .feature-item {
+      border-top: 2px solid rgba(55, 80, 115, 0.15);
+      padding-top: 1.2rem;
+    }
+
+    .feature-item h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      color: #0e1a2b;
+    }
+
+    .feature-item p {
+      color: #42546b;
       font-size: 0.95rem;
-      letter-spacing: 0.02rem;
-      color: #435第十五;
+      line-height: 1.5;
+    }
+
+    /* ПРАВАЯ ЧАСТЬ — КАРТОЧКА / AI ВИЗУАЛ */
+    .hero-visual {
+      background: #ffffff;
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 50px -18px rgba(0,32,64,0.25);
+      padding: 2rem 2rem 2.2rem 2rem;
+      border: 1px solid rgba(0,0,0,0.03);
+      transition: transform 0.2s;
+    }
+
+    /* карточка с заголовком (в стиле "GPT X") */
+    .visual-card {
+      width: 100%;
+    }
+
+    .card-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6a7f9e;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .card-title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.1;
+      color: #0a1422;
+      margin-bottom: 2rem;
+      letter-spacing: -0.02em;
+    }
+    .card-title span {
+      background: linear-gradient(145deg, #102a44, #2e4d7a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* диаграмма / абстрактные блоки */
+    .ai-graph {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 2rem 0 1.5rem;
+    }
+
+    .graph-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .graph-bar {
+      height: 0.8rem;
+      background: linear-gradient(90deg, #e2eaf6, #b3c7e5);
+      border-radius: 20px;
+      flex: 1;
+    }
+    .graph-bar.fill {
+      background: linear-gradient(90deg, #1d3857, #3a6191);
+      width: 0%; /* будет управлять js */
+    }
+    .graph-label {
+      min-width: 5.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #344e72;
+    }
+
+    .graph-percent {
+      font-weight: 600;
+      color: #1e324b;
+    }
+
+    /* мини-список "Text classification / Sentiment analysis" как на参考 */
+    .classify-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid rgba(100, 120, 150, 0.2);
-      padding-top: 1.8rem;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid #e8ecf5;
     }
-    .footer-note small {
-      opacity: 0.7;
-      font-weight: 300;
+    .classify-row:last-child {
+      border-bottom: none;
     }
-    .social-links {
-      display: flex;
-      gap: 1.5rem;
+    .classify-name {
+      font-weight: 550;
+      color: #121f33;
     }
-    .social-links a {
-      color: #2a3f5a;
-      text-decoration: none;
-      font-size: 0.95rem;
-      border-bottom: 1px dotted transparent;
-      transition: border 0.2s;
-    }
-    .social-links a:hover {
-      border-bottom: 1px dotted #5a789b;
+    .classify-tag {
+      background: #e2eaf5;
+      padding: 0.3rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      color: #1e3c61;
+      font-weight: 500;
     }
 
-    /* АДАПТАЦИЯ ПОД ПЛАНШЕТЫ И ТЕЛЕФОНЫ */
-    @media screen and (max-width: 900px) {
-      .content-grid {
+    /* ФУТЕР-ЗАГЛУШКА */
+    .footer-placeholder {
+      margin-top: 5rem;
+      border-top: 1px solid #d9e2ef;
+      padding: 2.5rem 0 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      color: #4f617b;
+      font-size: 0.9rem;
+    }
+
+    /* АДАПТАЦИЯ */
+    @media screen and (max-width: 950px) {
+      .hero-grid {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 2.5rem;
       }
-      .text-side {
+      .hero-text {
         order: 2;
-        text-align: center;
-        align-items: center;
       }
-      .description {
-        max-width: 100%;
-        border-left: none;
-        padding-left: 0;
-        border-top: 2px solid rgba(45,75,105,0.2);
-        padding-top: 1rem;
-      }
-      .features-mini {
-        justify-content: center;
-      }
-      .premium-button {
-        margin: 0 auto;
-      }
-      .visual-side {
+      .hero-visual {
         order: 1;
       }
-      .ai-sphere {
-        max-width: 340px;
-      }
-    }
-
-    @media screen and (max-width: 500px) {
-      .premium-container {
-        padding: 1.8rem 1.2rem;
-        border-radius: 2.2rem;
-      }
-      h1 {
-        font-size: 2.2rem;
-      }
-      .logo-text {
-        font-size: 1.5rem;
-      }
-      .footer-note {
+      .navbar {
         flex-direction: column;
-        gap: 1rem;
+        align-items: flex-start;
       }
     }
 
-    /* ДОПОЛНИТЕЛЬНАЯ ДЕТАЛЬ — СВЕТОВОЙ АКЦЕНТ */
-    .glow-effect {
-      position: fixed;
-      width: 70vw;
-      height: 70vw;
-      background: radial-gradient(circle at 40% 50%, rgba(200,220,250,0.2), transparent 70%);
-      top: -10vh;
-      right: -10vw;
-      border-radius: 50%;
-      z-index: -1;
-      pointer-events: none;
+    @media screen and (max-width: 550px) {
+      body { padding: 1rem; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .button-group .btn { width: 100%; text-align: center; }
+      .card-title { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
-  <div class="glow-effect"></div> <!-- мягкая подсветка фона -->
+  <div class="container">
+    <!-- ШАПКА (ЗАГЛУШКА) -->
+    <nav class="navbar">
+      <div class="logo">NEXUS<span>ai</span></div>
+      <div class="nav-links">
+        <a href="#">Платформа</a>
+        <a href="#">Решения</a>
+        <a href="#">Цены</a>
+        <a href="#">Документация</a>
+      </div>
+    </nav>
 
-  <main class="premium-container">
-    <div class="content-grid">
-
-      <!-- ЛЕВАЯ КОЛОНКА: ТЕКСТОВЫЙ БЛОК -->
-      <div class="text-side">
-        <div class="logo">
-          <div class="logo-icon">✦</div>
-          <div class="logo-text">novus<span class="logo-accent">ai</span></div>
-        </div>
-
+    <!-- ОСНОВНОЙ БЛОК -->
+    <div class="hero-grid">
+      <!-- Левая сторона — текст с features -->
+      <div class="hero-text">
+        <div class="pre-title">NEXT-GEN INTELLIGENCE</div>
         <h1>
-          <span class="gradient-text">искусственный интеллект</span><br>
-          премиального уровня
+          <span class="accent-underline">Streamline</span> business growth<br>with premium AI
         </h1>
+        <p class="hero-description">
+          Эксклюзивные B2C-решения на базе искусственного интеллекта. Для тех, кто ценит безупречный сервис и технологии будущего.
+        </p>
 
-        <div class="description">
-          Эксклюзивные B2C-решения на базе ИИ для ценителей совершенства. Скоро открытие закрытого клуба.
+        <div class="button-group">
+          <button class="btn btn-primary" aria-label="заглушка">Начать</button>
+          <button class="btn btn-outline" aria-label="заглушка">Тарифы</button>
         </div>
 
-        <div class="features-mini">
-          <div class="feature-tag"><span>◈</span> Адаптивный предиктивный анализ</div>
-          <div class="feature-tag"><span>◈</span> Элитная поддержка 24/7</div>
-          <div class="feature-tag"><span>◈</span> Приватный консьерж</div>
-        </div>
-
-        <!-- Заглушка CTA: не ведет на другие страницы, просто элемент -->
-        <div class="premium-button">
-          запросить ранний доступ
-        </div>
-      </div>
-
-      <!-- ПРАВАЯ КОЛОНКА: ВИЗУАЛИЗАЦИЯ AI -->
-      <div class="visual-side">
-        <div class="ai-sphere">
-          <div class="orbit"></div>
-          <div class="orbit"></div>
-          <div class="orbit"></div>
-          <div class="core">
-            <div class="pulse"></div>
+        <!-- Сетка преимуществ (как на参考) -->
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Поддержка 24/7</h3>
+            <p>Персональный AI-консьерж с приоритетным доступом для премиум-клиентов.</p>
           </div>
-          <div class="tiny-dot"></div>
-          <div class="tiny-dot tiny-dot2"></div>
+          <div class="feature-item">
+            <h3>Прогнозная аналитика</h3>
+            <p>Глубокое обучение на ваших данных с точностью до 99,4%.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Приватность</h3>
+            <p>Полное шифрование и изолированная инфраструктура.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Эксклюзивный доступ</h3>
+            <p>Закрытый клуб первых пользователей с особыми условиями.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Правая сторона — визуальная карточка, стилизованная под "GPT X / AI & Machine Learning Template" -->
+      <div class="hero-visual">
+        <div class="visual-card">
+          <div class="card-label">— версия 2.0 —</div>
+          <div class="card-title"><span>GPT</span> X</div>
+
+          <!-- Блок с progress-подобными полосками (стилизация) -->
+          <div class="ai-graph">
+            <div class="graph-row">
+              <span class="graph-label">Понимание</span>
+              <div class="graph-bar"><div class="graph-bar fill" style="width: 94%; height:100%; background: #1f3b60; border-radius:20px;"></div></div>
+              <span class="graph-percent">94%</span>
+            </div>
+            <div class="graph-row">
+              <span class="graph-label">Генерация</span>
+              <div class="graph-bar"><div class="graph-bar fill" style="width: 88%; height:100%; background: #1f3b60; border-radius:20px;"></div></div>
+              <span class="graph-percent">88%</span>
+            </div>
+            <div class="graph-row">
+              <span class="graph-label">Адаптация</span>
+              <div class="graph-bar"><div class="graph-bar fill" style="width: 96%; height:100%; background: #1f3b60; border-radius:20px;"></div></div>
+              <span class="graph-percent">96%</span>
+            </div>
+          </div>
+
+          <!-- Строки наподобие "Text classification / Sentiment analysis" -->
+          <div style="margin-top: 2.5rem;">
+            <div class="classify-row">
+              <span class="classify-name">Text classification</span>
+              <span class="classify-tag">Sentiment analysis →</span>
+            </div>
+            <div class="classify-row">
+              <span class="classify-name">Machine learning</span>
+              <span class="classify-tag">Deep learning →</span>
+            </div>
+            <div class="classify-row">
+              <span class="classify-name">Premium B2C</span>
+              <span class="classify-tag">Luxury AI →</span>
+            </div>
+          </div>
+
+          <!-- Доп. подпись как на референсе "AI & Machine Learning Webflow Template" -->
+          <div style="margin-top: 2rem; font-size: 0.9rem; color: #6e87a5; border-top: 1px dashed #cbd5e5; padding-top: 1.2rem;">
+            <span style="font-weight: 500;">AI & Machine Learning</span> — private launch
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ФУТЕР ЗАГЛУШКИ С ВЫВОДОМ ИНФОРМАЦИИ -->
-    <div class="footer-note">
-      <small>© NOVUS AI — предварительная презентация, 2025</small>
-      <div class="social-links">
-        <a href="#" aria-disabled="true">instagram</a>
-        <a href="#" aria-disabled="true">linkedin</a>
-        <a href="#" aria-disabled="true">telegram</a>
+    <!-- Футер заглушки (просто для завершённости) -->
+    <div class="footer-placeholder">
+      <div>© 2026 NEXUS AI. All rights reserved. </div>
+      <div style="display: flex; gap: 2rem;">
+        <span>LinkedIn</span>
+        <span>Twitter</span>
+        <span>Telegram</span>
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- ПРОСТАЯ JS АНИМАЦИЯ ДЛЯ НЕБОЛЬШОЙ ДИНАМИКИ -->
+  <!-- Микро-js для "оживления" полосок прогресса (просто декорация) -->
   <script>
     (function() {
-      // Плавное изменение прозрачности у орбит при загрузке — создает мягкое дыхание
-      const orbits = document.querySelectorAll('.orbit');
-      if (orbits.length) {
-        setInterval(() => {
-          orbits.forEach((orb, index) => {
-            // случайная небольшая вариация opacity
-            const randomOpacity = 0.2 + Math.random() * 0.2;
-            orb.style.transition = 'opacity 3s ease';
-            orb.style.opacity = randomOpacity;
-          });
-        }, 2800);
-      }
-
-      // опционально: параллакс-эффект на движение мыши (премиум штрих)
-      const sphere = document.querySelector('.ai-sphere');
-      if (sphere) {
-        document.addEventListener('mousemove', (e) => {
-          const x = (e.clientX / window.innerWidth - 0.5) * 10;
-          const y = (e.clientY / window.innerHeight - 0.5) * 8;
-          sphere.style.transform = `translate(${x}px, ${y}px)`;
-        });
-      }
-
-      // ничего критичного, просто для настроения
+      // небольшой эффект появления полос при загрузке (для красоты)
+      const fillBars = document.querySelectorAll('.graph-bar.fill');
+      fillBars.forEach(bar => {
+        // получаем ширину из style, но можно просто добавить transition
+        bar.style.transition = 'width 1s ease';
+      });
+      // принудительно устанавливаем ширину (она уже прописана в style, но на всякий случай)
+      // это просто декорация
     })();
   </script>
 </body>
-</html
+</html>
